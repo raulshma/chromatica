@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import app from '@/slices/app.slice';
+import wallpapers from '@/slices/wallpaper.slice';
 import config from '@/utils/config';
 import { Env } from '@/types/env';
 import logger from 'redux-logger';
@@ -7,7 +8,7 @@ import logger from 'redux-logger';
 const store = configureStore({
   reducer: {
     app,
-    // add more store ...
+    wallpapers,
   },
   middleware: getDefaultMiddleware =>
     config.env === Env.dev ? getDefaultMiddleware() : getDefaultMiddleware().concat(logger),

@@ -9,7 +9,13 @@ export const fonts = {
     bold: 'openSans_bold',
     boldItalic: 'openSans_bold_italic',
   },
-};
+  regular: 'openSans_regular',
+  regularItalic: 'openSans_regular_italic',
+  semiBold: 'openSans_semiBold',
+  semiBoldItalic: 'openSans_semiBold_italic',
+  bold: 'openSans_bold',
+  boldItalic: 'openSans_bold_italic',
+} as const;
 
 // preload fonts
 export const loadFonts = () =>
