@@ -2,14 +2,20 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "composite": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "moduleResolution": "bundler",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
+  "files": [],
+  "references": [
+    { "path": "./apps/mobile/tsconfig.json" },
+    { "path": "./packages/shared/tsconfig.json" },
+    { "path": "./packages/api/tsconfig.json" }
   ]
 }

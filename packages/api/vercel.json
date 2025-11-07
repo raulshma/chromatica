@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "projectSettings": {
+    "nodeVersion": "18.x"
+  },
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev:api",
+  "env": {
+    "UPLOADTHING_TOKEN": "@uploadthing-token"
+  }
+}

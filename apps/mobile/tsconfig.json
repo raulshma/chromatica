@@ -1,0 +1,22 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "moduleResolution": "bundler",
+    "composite": true,
+    "noEmit": false,
+    "paths": {
+      "@/*": ["./*"],
+      "@chromatica/shared": ["../../packages/shared/src"],
+      "@chromatica/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": ["node_modules", "dist", "build"],
+  "references": [
+    { "path": "../../packages/shared" }
+  ]
+}
