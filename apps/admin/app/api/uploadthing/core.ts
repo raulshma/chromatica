@@ -36,7 +36,7 @@ export const ourFileRouter = {
         const wallpapers = await getWallpapersCollection();
         if (!wallpapers) {
           console.warn('[uploadthing] MongoDB not available; skipping metadata persist.');
-          return;
+          return { dbStatus: 'unavailable' };
         }
 
         const uploadId = (metadata as { uploadId?: string } | undefined)?.uploadId ?? file.key;
@@ -48,8 +48,8 @@ export const ourFileRouter = {
             $set: {
               id: uploadId,
               name: file.name ?? null,
-              previewUrl: file.url,
-              fullUrl: file.url,
+              previewUrl: file.ufsUrl,
+              fullUrl: file.ufsUrl,
               size: file.size ?? null,
               status: 'success',
               updatedAt: now,
@@ -67,6 +67,7 @@ export const ourFileRouter = {
         );
 
         console.log('[uploadthing] metadata stored for', uploadId);
+        return { dbStatus: 'success' };
       } catch (error) {
         console.error('[uploadthing] failed to store metadata', error);
         try {
@@ -82,6 +83,7 @@ export const ourFileRouter = {
         } catch (innerError) {
           console.error('[uploadthing] failed to mark upload as failure', innerError);
         }
+        return { dbStatus: 'failure' };
       }
     }),
 };

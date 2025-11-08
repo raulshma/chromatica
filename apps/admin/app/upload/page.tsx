@@ -30,7 +30,15 @@ export default function UploadPage() {
             className="ut-label:text-slate-200 ut-allowed-content:text-slate-500"
             onClientUploadComplete={res => {
               if (!res || res.length === 0) return;
-              setMessage(`Uploaded ${res.length} file(s).`);
+
+              const failed = res.some(file => file.serverData?.dbStatus === 'failure');
+              if (failed) {
+                setMessage(
+                  'Uploaded, but failed to save metadata. Please review and delete the file from Wallpapers.',
+                );
+              } else {
+                setMessage(`Uploaded ${res.length} file(s).`);
+              }
             }}
             onUploadError={(error: Error) => {
               setMessage(error.message || 'Upload failed');
