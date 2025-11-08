@@ -1,4 +1,7 @@
 // Admin API client: calls internal Next.js API routes only.
+// NOTE: This module is used by both server and client components.
+// Do NOT import `next/headers` (server-only) directly here.
+
 const RAW_ADMIN_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
 const ADMIN_API_BASE_URL = RAW_ADMIN_BASE.replace(/\/+$/, '');
 
@@ -11,19 +14,16 @@ async function request(input: string, init?: RequestInit) {
   // Check if we're on the server side
   const isServer = typeof window === 'undefined';
 
-  const headers: Record<string, string> = {
-    ...(init?.headers || {}),
+  const headers: HeadersInit = {
+    ...((init?.headers as Record<string, string>) || {}),
     'Content-Type': 'application/json',
   };
 
   // On server side, we need to forward cookies for authentication
-  if (isServer) {
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const allCookies = cookieStore.getAll();
-
-    if (allCookies.length > 0) {
-      headers.Cookie = allCookies.map(c => `${c.name}=${c.value}`).join('; ');
+  if (isServer && typeof document !== 'undefined') {
+    const cookieHeader = document.cookie;
+    if (cookieHeader) {
+      headers.Cookie = cookieHeader;
     }
   }
 
