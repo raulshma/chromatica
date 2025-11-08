@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { adminApi } from '@/lib/api-client';
+import React from 'react';
 
 interface EditableWallpaper {
   id: string;
@@ -13,10 +14,11 @@ interface EditableWallpaper {
   size?: number;
 }
 
-export default function WallpaperDetailPage({ params }: { params: { id: string } }) {
+export default function WallpaperDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const search = useSearchParams();
-  const id = decodeURIComponent(params.id);
+  const resolvedParams = React.use(params);
+  const id = decodeURIComponent(resolvedParams.id);
   const [item, setItem] = useState<EditableWallpaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

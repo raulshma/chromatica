@@ -73,6 +73,49 @@ app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req
   }
 });
 
+app.get('/wallpapers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get all wallpapers and find the matching one
+    const listResult = await utapi.listFiles({
+      limit: 100,
+    });
+    const files = listResult.files as UploadThingFile[];
+
+    // Find the file with matching key
+    const file = files.find(f => {
+      const key = f.customId ?? f.key ?? f.id;
+      return key === id;
+    });
+
+    if (!file) {
+      return res.status(404).json({ error: 'Wallpaper not found' });
+    }
+
+    const baseUrl = uploadthingAppId
+      ? `https://${uploadthingAppId}.ufs.sh/f/${id}`
+      : `https://utfs.io/f/${id}`;
+
+    const wallpaper: Wallpaper = {
+      id,
+      name: file.name ?? 'Untitled',
+      description: undefined,
+      previewUrl: baseUrl,
+      fullUrl: baseUrl,
+      size: file.size,
+      uploadedAt: new Date(file.uploadedAt).toISOString(),
+      dominantColor: undefined,
+      tags: undefined,
+    };
+
+    res.json(wallpaper);
+  } catch (error) {
+    console.error('[api] failed to get wallpaper', error);
+    res.status(500).json({ error: 'Failed to get wallpaper' });
+  }
+});
+
 app.get('/', (_req, res) => {
   res.json({ status: 'ok', generatedAt: new Date().toISOString() });
 });
