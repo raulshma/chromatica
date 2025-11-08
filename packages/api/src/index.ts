@@ -6,7 +6,6 @@ import { applySecurityMiddleware } from './middleware/security.js';
 import { globalLimiter, wallpapersLimiter } from './middleware/rateLimit.js';
 import { wallpapersCacheMiddleware, setWallpapersCache } from './middleware/cache.js';
 import { config } from './config.js';
-import { adminRouter } from './routes/admin.js';
 
 const app = express();
 applySecurityMiddleware(app);
@@ -27,8 +26,6 @@ type UploadThingFile =
     : never;
 
 const uploadthingAppId = config.uploadthingAppId;
-
-app.use('/admin', adminRouter);
 
 app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req, res) => {
   try {
