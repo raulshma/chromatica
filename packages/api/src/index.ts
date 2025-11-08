@@ -1,67 +1,69 @@
 import express from 'express';
 import { UTApi } from 'uploadthing/server';
 import type { Wallpaper, WallpaperFeedResponse } from '@chromatica/shared';
+import { applySecurityMiddleware } from './middleware/security.js';
+import { globalLimiter, wallpapersLimiter } from './middleware/rateLimit.js';
+import { wallpapersCacheMiddleware, setWallpapersCache } from './middleware/cache.js';
+import { config } from './config.js';
 
 const app = express();
+applySecurityMiddleware(app);
+app.use(globalLimiter);
+
 const utapi = new UTApi({
-  apiKey: process.env.UPLOADTHING_TOKEN,
+  token: config.uploadthingToken,
+  logLevel: 'Debug',
 });
 
-type UploadThingFile = {
-  id?: string;
-  key?: string;
-  fileKey?: string;
-  customId?: string | null;
-  name?: string;
-  fileName?: string;
-  size?: number;
-  fileSize?: number;
-  uploadedAt?: string;
-  createdAt?: string;
-  url?: string;
-  appUrl?: string;
-  metadata?: Record<string, unknown> | null;
-};
+// Derive file type from UTApi listFiles
+type UploadThingFile =
+  Awaited<ReturnType<UTApi['listFiles']>> extends {
+    files: readonly (infer T)[];
+  }
+    ? T
+    : never;
 
-app.get('/wallpapers', async (_req, res) => {
+const uploadthingAppId = config.uploadthingAppId;
+
+app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req, res) => {
   try {
-    const { files = [] } = (await utapi.listFiles({
+    const listResult = await utapi.listFiles({
       limit: 100,
-    })) as unknown as {
-      files?: UploadThingFile[];
-    };
+    });
+    const files = listResult.files as UploadThingFile[];
 
     const items: Wallpaper[] = files
       .map(file => {
-        const metadata = (file.metadata ?? {}) as Record<string, unknown>;
-        const tags = metadata?.tags;
+        const key = file.customId ?? file.key ?? file.id;
+        if (!key) return null;
 
-        return {
-          id: file.customId ?? file.key ?? file.fileKey ?? file.id ?? '',
-          name: file.name ?? file.fileName ?? 'Untitled',
-          description:
-            typeof metadata?.description === 'string'
-              ? (metadata.description as string)
-              : undefined,
-          previewUrl: file.appUrl ?? file.url ?? '',
-          fullUrl: file.url ?? file.appUrl ?? '',
-          size: file.size ?? file.fileSize ?? 0,
-          uploadedAt: file.uploadedAt ?? file.createdAt ?? new Date().toISOString(),
-          dominantColor:
-            typeof metadata?.dominantColor === 'string'
-              ? (metadata.dominantColor as string)
-              : undefined,
-          tags: Array.isArray(tags) ? (tags as unknown[]).map(String) : undefined,
+        const baseUrl = uploadthingAppId
+          ? `https://${uploadthingAppId}.ufs.sh/f/${key}`
+          : `https://utfs.io/f/${key}`;
+
+        const item: Wallpaper = {
+          id: key,
+          name: file.name ?? 'Untitled',
+          description: undefined,
+          previewUrl: baseUrl,
+          fullUrl: baseUrl,
+          size: file.size,
+          uploadedAt: new Date().toISOString(),
+          dominantColor: undefined,
+          tags: undefined,
         };
+
+        return item;
       })
-      .filter(item => Boolean(item.fullUrl));
+      .filter((item): item is Wallpaper => Boolean(item));
 
     const response: WallpaperFeedResponse = {
       items,
       generatedAt: new Date().toISOString(),
     };
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    await setWallpapersCache(response);
+
     res.json(response);
   } catch (error) {
     console.error('[api] failed to list wallpapers', error);
@@ -73,4 +75,7 @@ app.get('/', (_req, res) => {
   res.json({ status: 'ok', generatedAt: new Date().toISOString() });
 });
 
-export default app;
+const port = config.port;
+app.listen(port, () => {
+  console.log(`API listening on port ${port}`);
+});
