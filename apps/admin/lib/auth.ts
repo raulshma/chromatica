@@ -89,12 +89,12 @@ export async function getAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   console.log('Checking session - token exists:', !!token);
-  
+
   if (token && isValidSessionToken(token)) {
     console.log('Session is valid');
     return { ok: true } as const;
   }
-  
+
   console.log('Session is invalid or missing');
   return { ok: false } as const;
 }
