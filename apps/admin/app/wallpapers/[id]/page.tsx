@@ -14,6 +14,8 @@ interface EditableWallpaper {
   previewUrl?: string;
   fullUrl?: string;
   size?: number;
+  artist?: string;
+  brief?: string;
 }
 
 export default function WallpaperDetailPage() {
@@ -23,7 +25,9 @@ export default function WallpaperDetailPage() {
   const [item, setItem] = useState<EditableWallpaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generatingBrief, setGeneratingBrief] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!mongoDbId) return; // safety guard, prevents /undefined calls
@@ -80,6 +84,29 @@ export default function WallpaperDetailPage() {
     }
   }
 
+  async function handleGenerateBrief() {
+    if (!imageFile || !item?.displayName) {
+      setError('Image file and display name are required to generate a brief');
+      return;
+    }
+
+    setGeneratingBrief(true);
+    setError(null);
+    try {
+      const response = await adminApi.generateBriefWithImage(
+        mongoDbId,
+        imageFile,
+        item.displayName,
+      );
+      setItem({ ...item, brief: response.brief });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to generate brief';
+      setError(message);
+    } finally {
+      setGeneratingBrief(false);
+    }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center">
@@ -132,6 +159,22 @@ export default function WallpaperDetailPage() {
               <p className="mt-2 text-xs text-slate-400">Preview URL: {item.previewUrl}</p>
             </div>
           )}
+
+          <div className="space-y-2">
+            <label className="block text-[10px] font-medium text-slate-400">Replace Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setImageFile(e.target.files?.[0] || null)}
+              className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            {imageFile && (
+              <p className="text-xs text-slate-400">
+                Selected: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <label className="block text-[10px] font-medium text-slate-400">Display name</label>
             <input
@@ -140,6 +183,37 @@ export default function WallpaperDetailPage() {
               onChange={e => setItem({ ...item, displayName: e.target.value })}
             />
           </div>
+
+          <div className="space-y-2">
+            <label className="block text-[10px] font-medium text-slate-400">Artist</label>
+            <input
+              className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={item.artist ?? ''}
+              onChange={e => setItem({ ...item, artist: e.target.value })}
+              placeholder="Artist or creator name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label className="block text-[10px] font-medium text-slate-400">
+                Brief (AI-generated)
+              </label>
+              <button
+                onClick={handleGenerateBrief}
+                disabled={generatingBrief || !imageFile || !item.displayName}
+                className="text-xs px-2 py-1 rounded-md bg-blue-600 text-slate-50 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                {generatingBrief ? 'Generating...' : 'Generate with Gemini'}
+              </button>
+            </div>
+            <textarea
+              className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-20"
+              value={item.brief ?? ''}
+              onChange={e => setItem({ ...item, brief: e.target.value })}
+              placeholder="1-2 sentence AI-generated description of the wallpaper"
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="block text-[10px] font-medium text-slate-400">File name</label>
             <input
@@ -149,6 +223,7 @@ export default function WallpaperDetailPage() {
               readOnly
             />
           </div>
+
           <div className="space-y-2">
             <label className="block text-[10px] font-medium text-slate-400">Description</label>
             <textarea
@@ -157,6 +232,7 @@ export default function WallpaperDetailPage() {
               onChange={e => setItem({ ...item, description: e.target.value })}
             />
           </div>
+
           {error && <p className="text-xs text-red-400">{error}</p>}
           <div className="flex items-center justify-between gap-3 pt-2">
             <button

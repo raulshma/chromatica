@@ -80,6 +80,46 @@ export const adminApi = {
     request(`/api/admin/wallpapers/${encodeURIComponent(mongoDbId)}`, {
       method: 'DELETE',
     }),
+  generateBriefWithImage: (mongoDbId: string, file: File, displayName: string) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('displayName', displayName);
+
+    // Note: We need to use fetch directly for FormData instead of the request wrapper
+    const path = `${ADMIN_API_BASE_URL}/api/admin/wallpapers/${encodeURIComponent(mongoDbId)}/generate-brief`;
+
+    return fetch(path, {
+      method: 'POST',
+      body: formData,
+      cache: 'no-store',
+    }).then(async res => {
+      if (!res.ok) {
+        const contentType = (res.headers.get('content-type') || '').toLowerCase();
+        if (contentType.includes('application/json')) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `Request failed with ${res.status}`);
+        }
+        const text = await res.text().catch(() => '');
+        throw new Error(
+          text
+            ? `Request failed with ${res.status}: ${text.slice(0, 200)}`
+            : `Request failed with ${res.status}`,
+        );
+      }
+
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      if (!contentType.includes('application/json')) {
+        const text = await res.text().catch(() => '');
+        throw new Error(
+          text
+            ? `Expected JSON response but received: ${text.slice(0, 200)}`
+            : 'Expected JSON response',
+        );
+      }
+
+      return res.json();
+    });
+  },
   getCategories: () => request('/api/admin/categories'),
   upsertCategory: (body: unknown) =>
     request('/api/admin/categories', {

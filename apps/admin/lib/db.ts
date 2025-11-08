@@ -40,6 +40,8 @@ export interface AdminWallpaperMeta {
   size?: number;
   tags?: string[];
   dominantColor?: string;
+  artist?: string; // Artist/creator name
+  brief?: string; // AI-generated brief description
   status?: 'pending' | 'success' | 'failure';
   createdAt?: string;
   updatedAt?: string;

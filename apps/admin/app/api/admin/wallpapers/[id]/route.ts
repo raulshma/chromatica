@@ -122,6 +122,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       };
     }
 
+    if (typeof body.artist === 'string' && body.artist !== (existing?.artist ?? null)) {
+      set.artist = body.artist;
+      changes.artist = { from: existing?.artist ?? null, to: body.artist };
+    }
+
+    if (typeof body.brief === 'string' && body.brief !== (existing?.brief ?? null)) {
+      set.brief = body.brief;
+      changes.brief = { from: existing?.brief ?? null, to: body.brief };
+    }
+
     // Optional image metadata updates from client (after replacing image)
     if (typeof body.previewUrl === 'string') {
       set.previewUrl = body.previewUrl;

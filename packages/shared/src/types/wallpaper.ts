@@ -10,6 +10,8 @@ export interface Wallpaper {
   uploadedAt: string;
   dominantColor?: string;
   tags?: string[];
+  artist?: string; // Artist/creator name
+  brief?: string; // AI-generated brief description
 }
 
 export interface WallpaperCollection {
