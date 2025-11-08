@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 const SESSION_COOKIE_NAME = 'admin_session';
@@ -79,10 +80,7 @@ export async function requireAdminApiSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token || !isValidSessionToken(token)) {
-    throw new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 }
 

@@ -14,7 +14,7 @@ export default async function WallpapersPage() {
     previewUrl?: string;
     size?: number;
   }[];
-
+  console.log(items);
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
       <div className="mx-auto max-w-6xl px-6 py-6 space-y-4">
