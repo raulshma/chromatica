@@ -19,8 +19,10 @@ export default async function WallpapersPage() {
   // Only fetch data if authenticated
   const data = await getWallpapersServer();
   const items = (data?.items ?? []) as {
-    id: string;
-    name?: string;
+    _id: string;
+    uploadThingFileKey?: string;
+    fileName?: string;
+    displayName?: string;
     description?: string;
     previewUrl?: string;
     size?: number;
@@ -51,24 +53,26 @@ export default async function WallpapersPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4">
             {items.map(w => (
               <article
-                key={w.id}
+                key={w._id}
                 className="group relative overflow-hidden rounded-lg border border-slate-800/70 bg-slate-950/60 hover:border-emerald-500/60 hover:bg-slate-900/80 transition">
                 {w.previewUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={w.previewUrl}
-                    alt={w.name || 'Wallpaper'}
+                    alt={w.displayName || w.fileName || 'Wallpaper'}
                     className="h-32 w-full object-cover"
                   />
                 )}
                 <div className="p-2 space-y-1">
-                  <h2 className="text-xs font-medium line-clamp-1">{w.name || w.id}</h2>
+                  <h2 className="text-xs font-medium line-clamp-1">
+                    {w.displayName || w.fileName || w._id}
+                  </h2>
                   <p className="text-[10px] text-slate-500 line-clamp-2">
                     {w.description || 'No description'}
                   </p>
                   <div className="flex justify-between items-center pt-1">
                     <a
-                      href={`/wallpapers/${encodeURIComponent(w.id)}`}
+                      href={`/wallpapers/${encodeURIComponent(w._id)}`}
                       className="text-[10px] text-emerald-400 hover:text-emerald-300">
                       Edit
                     </a>

@@ -27,6 +27,15 @@ type UploadThingFile =
 
 const uploadthingAppId = config.uploadthingAppId;
 
+/**
+ * Generate CDN URL for an UploadThing file key
+ */
+function generateWallpaperUrl(uploadThingFileKey: string): string {
+  return uploadthingAppId
+    ? `https://${uploadthingAppId}.ufs.sh/f/${uploadThingFileKey}`
+    : `https://utfs.io/f/${uploadThingFileKey}`;
+}
+
 app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req, res) => {
   try {
     const listResult = await utapi.listFiles({
@@ -35,22 +44,25 @@ app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req
     const files = listResult.files as UploadThingFile[];
 
     const items: Wallpaper[] = files
-      .map(file => {
-        const key = file.customId ?? file.key ?? file.id;
-        if (!key) return null;
+      .map((file, index) => {
+        const uploadThingFileKey = file.customId ?? file.key ?? file.id;
+        if (!uploadThingFileKey) {
+          console.warn(`[api] File at index ${index} has no uploadThingFileKey`);
+          return null;
+        }
 
-        const baseUrl = uploadthingAppId
-          ? `https://${uploadthingAppId}.ufs.sh/f/${key}`
-          : `https://utfs.io/f/${key}`;
+        const url = generateWallpaperUrl(uploadThingFileKey);
 
         const item: Wallpaper = {
-          id: key,
-          name: file.name ?? 'Untitled',
+          _id: uploadThingFileKey, // Use UploadThing key as MongoDB _id for now (serves as unique ID)
+          uploadThingFileKey,
+          fileName: file.name ?? 'Untitled',
+          displayName: undefined,
           description: undefined,
-          previewUrl: baseUrl,
-          fullUrl: baseUrl,
+          previewUrl: url,
+          fullUrl: url,
           size: file.size,
-          uploadedAt: new Date().toISOString(),
+          uploadedAt: new Date(file.uploadedAt).toISOString(),
           dominantColor: undefined,
           tags: undefined,
         };
@@ -73,9 +85,9 @@ app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req
   }
 });
 
-app.get('/wallpapers/:id', async (req, res) => {
+app.get('/wallpapers/:uploadThingFileKey', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { uploadThingFileKey } = req.params;
 
     // Get all wallpapers and find the matching one
     const listResult = await utapi.listFiles({
@@ -86,23 +98,23 @@ app.get('/wallpapers/:id', async (req, res) => {
     // Find the file with matching key
     const file = files.find(f => {
       const key = f.customId ?? f.key ?? f.id;
-      return key === id;
+      return key === uploadThingFileKey;
     });
 
     if (!file) {
       return res.status(404).json({ error: 'Wallpaper not found' });
     }
 
-    const baseUrl = uploadthingAppId
-      ? `https://${uploadthingAppId}.ufs.sh/f/${id}`
-      : `https://utfs.io/f/${id}`;
+    const url = generateWallpaperUrl(uploadThingFileKey);
 
     const wallpaper: Wallpaper = {
-      id,
-      name: file.name ?? 'Untitled',
+      _id: uploadThingFileKey,
+      uploadThingFileKey,
+      fileName: file.name ?? 'Untitled',
+      displayName: undefined,
       description: undefined,
-      previewUrl: baseUrl,
-      fullUrl: baseUrl,
+      previewUrl: url,
+      fullUrl: url,
       size: file.size,
       uploadedAt: new Date(file.uploadedAt).toISOString(),
       dominantColor: undefined,

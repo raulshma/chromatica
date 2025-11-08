@@ -108,13 +108,15 @@ export default function SetWallpaperPrompt() {
 
   const wallpaper = useMemo(() => {
     if (params.id) {
-      const match = items.find(item => item.id === params.id);
+      const match = items.find(item => item._id === params.id);
       if (match) return match;
     }
     if (params.src) {
       return {
-        id: params.src,
-        name: 'Zenith Wallpaper',
+        _id: params.src,
+        uploadThingFileKey: params.src,
+        fileName: 'Zenith Wallpaper',
+        displayName: 'Zenith Wallpaper',
         previewUrl: params.src,
         fullUrl: params.src,
         size: 0,

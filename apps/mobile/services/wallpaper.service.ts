@@ -44,7 +44,7 @@ export async function saveWallpaperToLibrary(wallpaper: Wallpaper): Promise<void
   }
 
   const fileExtension = wallpaper.fullUrl.split('.').pop() ?? 'jpg';
-  const cachePath = `${FileSystem.cacheDirectory ?? FileSystem.documentDirectory}${wallpaper.id}.${fileExtension}`;
+  const cachePath = `${FileSystem.cacheDirectory ?? FileSystem.documentDirectory}${wallpaper._id}.${fileExtension}`;
 
   const download = await FileSystem.downloadAsync(wallpaper.fullUrl, cachePath);
   const asset = await MediaLibrary.createAssetAsync(download.uri);
@@ -56,7 +56,7 @@ export async function saveWallpaperToLibrary(wallpaper: Wallpaper): Promise<void
 export async function openSetWallpaperDeepLink(wallpaper: Wallpaper): Promise<void> {
   const url = Linking.createURL('set-wallpaper', {
     queryParams: {
-      id: wallpaper.id,
+      id: wallpaper._id,
       src: wallpaper.fullUrl,
     },
   });

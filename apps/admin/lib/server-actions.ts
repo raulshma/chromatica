@@ -32,8 +32,10 @@ export async function getWallpapersServer() {
       .toArray();
 
     const items = docs.map(doc => ({
-      id: doc.id,
-      name: doc.name ?? undefined,
+      _id: doc._id?.toString() || doc.uploadThingFileKey,
+      uploadThingFileKey: doc.uploadThingFileKey,
+      fileName: doc.fileName ?? 'Untitled',
+      displayName: doc.displayName ?? undefined,
       description: doc.description ?? undefined,
       previewUrl: doc.previewUrl ?? undefined,
       size: doc.size ?? undefined,

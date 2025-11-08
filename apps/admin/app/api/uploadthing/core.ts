@@ -1,4 +1,5 @@
 import { createUploadthing } from 'uploadthing/next';
+import { ObjectId } from 'mongodb';
 import { getWallpapersCollection } from '@/lib/db';
 
 const f = createUploadthing();
@@ -15,17 +16,20 @@ export const ourFileRouter = {
           return {};
         }
 
-        const uploadId = crypto.randomUUID();
+        const uploadThingFileKey = crypto.randomUUID(); // This will be updated with actual key on completion
         const now = new Date().toISOString();
 
-        await wallpapers.insertOne({
-          id: uploadId,
+        const result = await wallpapers.insertOne({
+          uploadThingFileKey,
+          fileName: 'Pending upload',
           status: 'pending',
           createdAt: now,
           updatedAt: now,
         });
 
-        return { uploadId };
+        const mongoDbId = result.insertedId.toString();
+
+        return { mongoDbId };
       } catch (error) {
         console.error('[uploadthing] failed to create pre-upload document', error);
         return {};
@@ -39,15 +43,23 @@ export const ourFileRouter = {
           return { dbStatus: 'unavailable' };
         }
 
-        const uploadId = (metadata as { uploadId?: string } | undefined)?.uploadId ?? file.key;
+        const mongoDbId = (metadata as { mongoDbId?: string } | undefined)?.mongoDbId;
+        if (!mongoDbId) {
+          console.warn('[uploadthing] No mongoDbId in metadata, cannot update document');
+          return { dbStatus: 'failure' };
+        }
+
+        const uploadThingFileKey = file.customId ?? file.key;
         const now = new Date().toISOString();
 
+        const mongoObjectId = new ObjectId(mongoDbId);
+
         await wallpapers.updateOne(
-          { id: uploadId },
+          { _id: mongoObjectId },
           {
             $set: {
-              id: uploadId,
-              name: file.name ?? null,
+              uploadThingFileKey,
+              fileName: file.name ?? 'Wallpaper',
               previewUrl: file.ufsUrl,
               fullUrl: file.ufsUrl,
               size: file.size ?? null,
@@ -66,19 +78,22 @@ export const ourFileRouter = {
           { upsert: true },
         );
 
-        console.log('[uploadthing] metadata stored for', uploadId);
-        return { dbStatus: 'success' };
+        console.log('[uploadthing] metadata stored for', mongoDbId);
+        return { dbStatus: 'success', mongoDbId };
       } catch (error) {
         console.error('[uploadthing] failed to store metadata', error);
         try {
           const wallpapers = await getWallpapersCollection();
           if (wallpapers) {
-            const uploadId = (metadata as { uploadId?: string } | undefined)?.uploadId ?? file.key;
-            await wallpapers.updateOne(
-              { id: uploadId },
-              { $set: { status: 'failure', updatedAt: new Date().toISOString() } },
-              { upsert: true },
-            );
+            const mongoDbId = (metadata as { mongoDbId?: string } | undefined)?.mongoDbId;
+            if (mongoDbId) {
+              const mongoObjectId = new ObjectId(mongoDbId);
+              await wallpapers.updateOne(
+                { _id: mongoObjectId },
+                { $set: { status: 'failure', updatedAt: new Date().toISOString() } },
+                { upsert: true },
+              );
+            }
           }
         } catch (innerError) {
           console.error('[uploadthing] failed to mark upload as failure', innerError);

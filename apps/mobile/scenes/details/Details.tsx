@@ -122,13 +122,13 @@ export default function Details() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { dispatch, items, favorites } = useWallpaperSlice();
 
-  const wallpaper = useMemo(() => items.find(item => item.id === id) ?? items[0], [id, items]);
+  const wallpaper = useMemo(() => items.find(item => item._id === id) ?? items[0], [id, items]);
 
   const [isSaving, setSaving] = useState(false);
   const [isSetting, setSetting] = useState(false);
 
   const isFavorite = useMemo(
-    () => (wallpaper ? favorites.includes(wallpaper.id) : false),
+    () => (wallpaper ? favorites.includes(wallpaper._id) : false),
     [favorites, wallpaper],
   );
 
@@ -150,7 +150,7 @@ export default function Details() {
 
   const handleToggleFavorite = useCallback(() => {
     if (wallpaper) {
-      dispatch(toggleWallpaperFavorite(wallpaper.id));
+      dispatch(toggleWallpaperFavorite(wallpaper._id));
     }
   }, [dispatch, wallpaper]);
 
@@ -248,7 +248,9 @@ export default function Details() {
           style={{ paddingTop: 32 }}>
           <View style={styles.footer}>
             <View>
-              <Text style={styles.title}>{wallpaper.name}</Text>
+              <Text style={styles.title}>
+                {wallpaper.displayName ?? wallpaper.fileName ?? 'Wallpaper'}
+              </Text>
               {wallpaper.description ? (
                 <Text style={styles.subtitle}>{wallpaper.description}</Text>
               ) : null}

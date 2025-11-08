@@ -6,8 +6,9 @@ import { adminApi } from '@/lib/api-client';
 import React from 'react';
 
 interface EditableWallpaper {
-  id: string;
-  name?: string;
+  _id: string;
+  uploadThingFileKey?: string;
+  fileName?: string;
   displayName?: string;
   description?: string;
   previewUrl?: string;
@@ -18,22 +19,22 @@ interface EditableWallpaper {
 export default function WallpaperDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const id = params?.id ? decodeURIComponent(params.id) : '';
+  const mongoDbId = params?.id ? decodeURIComponent(params.id) : '';
   const [item, setItem] = useState<EditableWallpaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return; // safety guard, prevents /undefined calls
+    if (!mongoDbId) return; // safety guard, prevents /undefined calls
 
     let cancelled = false;
     (async () => {
       try {
-        const data = await adminApi.getWallpaper(id);
+        const data = await adminApi.getWallpaper(mongoDbId);
         console.log('[admin] fetched wallpaper data:', data);
         if (!cancelled) {
-          setItem(data ?? { id });
+          setItem(data ?? { _id: mongoDbId });
         }
       } catch (err) {
         if (!cancelled) {
@@ -47,14 +48,14 @@ export default function WallpaperDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [mongoDbId]);
 
   async function handleSave() {
     if (!item) return;
     setSaving(true);
     setError(null);
     try {
-      await adminApi.upsertWallpaper(id, item);
+      await adminApi.upsertWallpaper(mongoDbId, item);
       router.push('/wallpapers');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save';
@@ -69,7 +70,7 @@ export default function WallpaperDetailPage() {
     setSaving(true);
     setError(null);
     try {
-      await adminApi.deleteWallpaper(id);
+      await adminApi.deleteWallpaper(mongoDbId);
       router.push('/wallpapers');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete';
@@ -101,7 +102,7 @@ export default function WallpaperDetailPage() {
         <header className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Edit Wallpaper</h1>
-            <p className="text-sm text-slate-400">ID: {item.id}</p>
+            <p className="text-sm text-slate-400">MongoDB ID: {item._id}</p>
           </div>
           <button
             onClick={() => router.push('/wallpapers')}
@@ -116,13 +117,13 @@ export default function WallpaperDetailPage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.previewUrl}
-                alt={item.displayName || item.name || 'Wallpaper'}
+                alt={item.displayName || item.fileName || 'Wallpaper'}
                 className="h-40 w-full object-cover rounded-lg border border-slate-800/70"
                 onError={e => {
                   // show a small console hint when image fails to load
 
                   console.warn('[admin] preview image failed to load', {
-                    id,
+                    mongoDbId,
                     src: item.previewUrl,
                     err: e,
                   });
@@ -140,10 +141,10 @@ export default function WallpaperDetailPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-[10px] font-medium text-slate-400">Name (file key)</label>
+            <label className="block text-[10px] font-medium text-slate-400">File name</label>
             <input
               className="w-full px-3 py-2 rounded-md bg-slate-900/60 border border-slate-800 text-slate-500 text-xs"
-              value={item.name ?? ''}
+              value={item.fileName ?? ''}
               disabled
               readOnly
             />

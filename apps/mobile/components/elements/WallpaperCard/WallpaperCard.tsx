@@ -21,7 +21,10 @@ function WallpaperCardComponent({
   onToggleFavorite,
   isFavorite,
 }: WallpaperCardProps) {
-  const title = useMemo(() => wallpaper.name ?? 'Wallpaper', [wallpaper.name]);
+  const title = useMemo(
+    () => wallpaper.displayName ?? wallpaper.fileName ?? 'Wallpaper',
+    [wallpaper.displayName, wallpaper.fileName],
+  );
 
   return (
     <Pressable style={styles.card} onPress={onPress} accessibilityLabel={`View ${title}`}>

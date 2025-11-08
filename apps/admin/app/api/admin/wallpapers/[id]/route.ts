@@ -9,29 +9,50 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = await params;
+  const { id: mongoDbIdString } = await params;
 
-  // Don't try to parse the request URL, we don't need it for this endpoint
-  // to avoid the "File URL path must be absolute" error in Next.js error handling
+  try {
+    // Don't try to parse the request URL, we don't need it for this endpoint
+    // to avoid the "File URL path must be absolute" error in Next.js error handling
 
-  // Generate URL using the same pattern as the API project
-  const baseUrl = uploadthingAppId
-    ? `https://${uploadthingAppId}.ufs.sh/f/${id}`
-    : `https://utfs.io/f/${id}`;
+    const wallpapers = await getWallpapersCollection();
+    if (!wallpapers) {
+      return NextResponse.json({ error: 'MongoDB not configured' }, { status: 500 });
+    }
 
-  const wallpapers = await getWallpapersCollection();
-  const doc = wallpapers ? await wallpapers.findOne({ id }) : null;
+    const { ObjectId: ObjectIdClass } = await import('mongodb');
+    let mongoDbId;
+    try {
+      mongoDbId = new ObjectIdClass(mongoDbIdString);
+    } catch {
+      return NextResponse.json({ error: 'Invalid wallpaper ID format' }, { status: 400 });
+    }
 
-  return NextResponse.json({
-    id,
-    url: baseUrl,
-    previewUrl: baseUrl,
-    name: doc?.name ?? null,
-    displayName: doc?.displayName ?? doc?.name ?? null,
-    description: doc?.description ?? null,
-    size: doc?.size ?? null,
-    history: doc?.history ?? [],
-  });
+    const doc = await wallpapers.findOne({ _id: mongoDbId });
+
+    if (!doc) {
+      return NextResponse.json({ error: 'Wallpaper not found' }, { status: 404 });
+    }
+
+    const baseUrl = uploadthingAppId
+      ? `https://${uploadthingAppId}.ufs.sh/f/${doc.uploadThingFileKey}`
+      : `https://utfs.io/f/${doc.uploadThingFileKey}`;
+
+    return NextResponse.json({
+      _id: doc._id.toString(),
+      uploadThingFileKey: doc.uploadThingFileKey,
+      url: baseUrl,
+      previewUrl: doc.previewUrl || baseUrl,
+      fileName: doc.fileName ?? 'Untitled',
+      displayName: doc.displayName ?? null,
+      description: doc.description ?? null,
+      size: doc.size ?? null,
+      history: doc.history ?? [],
+    });
+  } catch (error) {
+    console.error('Error in GET /api/admin/wallpapers/[id]', error);
+    return NextResponse.json({ error: 'Failed to fetch wallpaper' }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -40,9 +61,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = await params;
+  const { id: mongoDbIdString } = await params;
 
   try {
+    const { ObjectId: ObjectIdClass } = await import('mongodb');
+    let mongoDbId;
+    try {
+      mongoDbId = new ObjectIdClass(mongoDbIdString);
+    } catch {
+      return NextResponse.json({ error: 'Invalid wallpaper ID format' }, { status: 400 });
+    }
+
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
     const wallpapers = await getWallpapersCollection();
@@ -50,7 +79,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'MongoDB not configured' }, { status: 500 });
     }
 
-    const existing = await wallpapers.findOne({ id });
+    const existing = await wallpapers.findOne({ _id: mongoDbId });
     const now = new Date().toISOString();
 
     // Build $set and history changes diff
@@ -65,16 +94,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       changes.displayName = { from: existing?.displayName ?? null, to: body.displayName };
     }
 
-    if (typeof body.name === 'string' && body.name !== (existing?.name ?? null)) {
-      set.name = body.name;
-      changes.name = { from: existing?.name ?? null, to: body.name };
+    if (typeof body.fileName === 'string' && body.fileName !== (existing?.fileName ?? null)) {
+      set.fileName = body.fileName;
+      changes.fileName = { from: existing?.fileName ?? null, to: body.fileName };
 
       // Try to rename file in UploadThing, but do not fail entirely if this fails
       try {
-        await utapi.renameFiles([{ fileKey: id, newName: body.name }]);
+        await utapi.renameFiles([
+          { fileKey: existing?.uploadThingFileKey || mongoDbIdString, newName: body.fileName },
+        ]);
       } catch (error) {
         console.error('Failed to rename file in UploadThing for wallpaper', {
-          id,
+          mongoDbIdString,
           error,
         });
       }
@@ -105,7 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (Object.keys(set).length) {
       set.updatedAt = now;
       await wallpapers.updateOne(
-        { id },
+        { _id: mongoDbId },
         {
           $set: set,
           $push: {
@@ -145,35 +176,55 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 
   // Ensure id is treated as plain string, not as path-like
-  const { id } = await params;
-  const fileKey = String(id);
+  const { id: mongoDbIdString } = await params;
 
-  // Don't try to parse the request URL, we don't need it for this endpoint
-  // to avoid the "File URL path must be absolute" error in Next.js error handling
+  try {
+    const { ObjectId: ObjectIdClass } = await import('mongodb');
+    let mongoDbId;
+    try {
+      mongoDbId = new ObjectIdClass(mongoDbIdString);
+    } catch {
+      return NextResponse.json({ error: 'Invalid wallpaper ID format' }, { status: 400 });
+    }
 
-  const wallpapers = await getWallpapersCollection();
+    const wallpapers = await getWallpapersCollection();
 
-  // Delete file from UploadThing
-  await utapi.deleteFiles([fileKey]);
+    // Get the document to find the UploadThing file key
+    const doc = wallpapers ? await wallpapers.findOne({ _id: mongoDbId }) : null;
+    const uploadThingFileKey = doc?.uploadThingFileKey;
 
-  if (wallpapers) {
-    const now = new Date().toISOString();
-    await wallpapers.updateOne(
-      { id: fileKey },
-      {
-        $set: { status: 'failure', updatedAt: now },
-        $push: {
-          history: {
-            at: now,
-            changes: {
-              deleted: { from: 'active', to: 'deleted' },
+    if (!uploadThingFileKey) {
+      return NextResponse.json(
+        { error: 'Wallpaper not found or missing file key' },
+        { status: 404 },
+      );
+    }
+
+    // Delete file from UploadThing
+    await utapi.deleteFiles([uploadThingFileKey]);
+
+    if (wallpapers) {
+      const now = new Date().toISOString();
+      await wallpapers.updateOne(
+        { _id: mongoDbId },
+        {
+          $set: { status: 'failure', updatedAt: now },
+          $push: {
+            history: {
+              at: now,
+              changes: {
+                deleted: { from: 'active', to: 'deleted' },
+              },
             },
           },
         },
-      },
-      { upsert: true },
-    );
-  }
+        { upsert: true },
+      );
+    }
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('Error in DELETE /api/admin/wallpapers/[id]', error);
+    return NextResponse.json({ error: 'Failed to delete wallpaper' }, { status: 500 });
+  }
 }

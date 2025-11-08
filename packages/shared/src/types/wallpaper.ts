@@ -1,6 +1,8 @@
 export interface Wallpaper {
-  id: string;
-  name: string;
+  _id: string; // MongoDB document ObjectId (hex string)
+  uploadThingFileKey: string; // UploadThing file key (used for file operations and CDN URLs)
+  fileName: string; // Original filename from upload
+  displayName?: string; // Human-friendly name for display in UI
   description?: string;
   previewUrl: string;
   fullUrl: string;
@@ -11,7 +13,7 @@ export interface Wallpaper {
 }
 
 export interface WallpaperCollection {
-  id: string;
+  _id: string;
   title: string;
   description?: string;
   items: Wallpaper[];

@@ -99,16 +99,16 @@ export default function Home() {
       <WallpaperCard
         wallpaper={item}
         onPress={() =>
-          router.push({ pathname: '(main)/(tabs)/home/details', params: { id: item.id } })
+          router.push({ pathname: '(main)/(tabs)/home/details', params: { id: item._id } })
         }
-        onToggleFavorite={() => dispatch(toggleWallpaperFavorite(item.id))}
-        isFavorite={favorites.includes(item.id)}
+        onToggleFavorite={() => dispatch(toggleWallpaperFavorite(item._id))}
+        isFavorite={favorites.includes(item._id)}
       />
     ),
     [router, dispatch, favorites],
   );
 
-  const keyExtractor = useCallback((item: Wallpaper) => item.id, []);
+  const keyExtractor = useCallback((item: Wallpaper) => item._id, []);
 
   const skeletonIds = useMemo(() => Array.from({ length: 6 }, (_, index) => index), []);
 
@@ -224,7 +224,7 @@ export default function Home() {
             </Text>
           ) : (
             favorites.map(id => {
-              const item = items.find(w => w.id === id);
+              const item = items.find(w => w._id === id);
               if (!item) return null;
               return (
                 <Button

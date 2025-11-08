@@ -61,21 +61,21 @@ export async function GET() {
       .map((file, index) => {
         console.log(`Processing file ${index}:`, JSON.stringify(file, null, 2));
 
-        const key = file.customId ?? file.key ?? file.id;
-        if (!key) {
-          console.warn(`File at index ${index} has no key, customId, or id`);
+        const uploadThingFileKey = file.customId ?? file.key ?? file.id;
+        if (!uploadThingFileKey) {
+          console.warn(`File at index ${index} has no uploadThingFileKey, customId, or id`);
           return null;
         }
 
         // Validate key is a string and not empty
-        if (typeof key !== 'string' || key.trim() === '') {
-          console.warn(`Invalid file key at index ${index}:`, key);
+        if (typeof uploadThingFileKey !== 'string' || uploadThingFileKey.trim() === '') {
+          console.warn(`Invalid uploadThingFileKey at index ${index}:`, uploadThingFileKey);
           return null;
         }
 
         // Clean the key to ensure it's a valid URL path component
         // Make sure to remove any URL encoding that might have been applied
-        let cleanKey = key.trim();
+        let cleanKey = uploadThingFileKey.trim();
 
         // If the key already looks like a URL, extract just the file key part
         if (cleanKey.includes('://')) {
@@ -99,8 +99,9 @@ export async function GET() {
 
         console.log(`Generated URL for file ${index}:`, baseUrl);
         return {
-          id: cleanKey,
-          name: file.name ?? 'Untitled',
+          _id: cleanKey,
+          uploadThingFileKey: cleanKey,
+          fileName: file.name ?? 'Untitled',
           previewUrl: baseUrl,
           size: file.size,
           uploadedAt: new Date(file.uploadedAt).toISOString(),

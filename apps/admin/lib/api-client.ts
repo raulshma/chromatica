@@ -65,19 +65,19 @@ async function request(input: string, init?: RequestInit) {
 
 export const adminApi = {
   getWallpapers: () => request('/api/admin/wallpapers'),
-  getWallpaper: (id: string) => {
-    if (!id) {
-      return Promise.reject(new Error('Wallpaper id is required'));
+  getWallpaper: (mongoDbId: string) => {
+    if (!mongoDbId) {
+      return Promise.reject(new Error('Wallpaper _id is required'));
     }
-    return request(`/api/admin/wallpapers/${encodeURIComponent(id)}`);
+    return request(`/api/admin/wallpapers/${encodeURIComponent(mongoDbId)}`);
   },
-  upsertWallpaper: (id: string, body: unknown) =>
-    request(`/api/admin/wallpapers/${encodeURIComponent(id)}`, {
+  upsertWallpaper: (mongoDbId: string, body: unknown) =>
+    request(`/api/admin/wallpapers/${encodeURIComponent(mongoDbId)}`, {
       method: 'POST',
       body: JSON.stringify(body),
     }),
-  deleteWallpaper: (id: string) =>
-    request(`/api/admin/wallpapers/${encodeURIComponent(id)}`, {
+  deleteWallpaper: (mongoDbId: string) =>
+    request(`/api/admin/wallpapers/${encodeURIComponent(mongoDbId)}`, {
       method: 'DELETE',
     }),
   getCategories: () => request('/api/admin/categories'),
