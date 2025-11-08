@@ -8,11 +8,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
+    console.log('Attempting login with username:', username);
     assertValidAdminCredentials(username, password);
+    console.log('Credentials validated successfully');
+
     await createAdminSession();
+    console.log('Session created successfully');
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error('Login failed:', error);
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 }

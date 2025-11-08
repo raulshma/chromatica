@@ -56,7 +56,7 @@ export async function createAdminSession() {
   const ttlMinutes = parseInt(process.env.ADMIN_SESSION_TTL || '43200', 10);
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax', // Changed from 'strict' to 'lax' to allow redirects
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: ttlMinutes * 60,
@@ -80,15 +80,21 @@ export async function requireAdminApiSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token || !isValidSessionToken(token)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return false;
   }
+  return true;
 }
 
 export async function getAdminSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  console.log('Checking session - token exists:', !!token);
+  
   if (token && isValidSessionToken(token)) {
+    console.log('Session is valid');
     return { ok: true } as const;
   }
+  
+  console.log('Session is invalid or missing');
   return { ok: false } as const;
 }

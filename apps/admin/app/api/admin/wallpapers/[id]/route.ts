@@ -10,21 +10,19 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { id } = params;
 
-  try {
-    // Generate URL using the same pattern as the API project
-    const baseUrl = uploadthingAppId
-      ? `https://${uploadthingAppId}.ufs.sh/f/${id}`
-      : `https://utfs.io/f/${id}`;
+  // Don't try to parse the request URL, we don't need it for this endpoint
+  // to avoid the "File URL path must be absolute" error in Next.js error handling
 
-    return NextResponse.json({
-      id,
-      url: baseUrl,
-      previewUrl: baseUrl,
-    });
-  } catch (error) {
-    console.error('Error fetching file from UploadThing:', error);
-    return NextResponse.json({ error: 'Failed to fetch wallpaper' }, { status: 500 });
-  }
+  // Generate URL using the same pattern as the API project
+  const baseUrl = uploadthingAppId
+    ? `https://${uploadthingAppId}.ufs.sh/f/${id}`
+    : `https://utfs.io/f/${id}`;
+
+  return NextResponse.json({
+    id,
+    url: baseUrl,
+    previewUrl: baseUrl,
+  });
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -36,36 +34,34 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const { id } = params;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
+  // Don't try to parse the request URL, we don't need it for this endpoint
+  // to avoid the "File URL path must be absolute" error in Next.js error handling
+
   // For UploadThing, we can rename files if needed
   if (body.name && typeof body.name === 'string') {
-    try {
-      await utapi.renameFiles([{ fileKey: id, newName: body.name }]);
-      return NextResponse.json({ ok: true });
-    } catch (error) {
-      console.error('Error renaming file in UploadThing:', error);
-      return NextResponse.json({ error: 'Failed to update wallpaper' }, { status: 500 });
-    }
+    await utapi.renameFiles([{ fileKey: id, newName: body.name }]);
+    return NextResponse.json({ ok: true });
   }
 
   // No metadata updates needed for UploadThing
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const authResult = await requireAdminApiSession();
   if (authResult?.status === 401) {
     return authResult;
   }
 
+  // Ensure id is treated as plain string, not as path-like
   const { id } = params;
+  const fileKey = String(id);
 
-  try {
-    // Delete file from UploadThing
-    await utapi.deleteFiles([id]);
+  // Don't try to parse the request URL, we don't need it for this endpoint
+  // to avoid the "File URL path must be absolute" error in Next.js error handling
 
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error('Error deleting file from UploadThing:', error);
-    return NextResponse.json({ error: 'Failed to delete wallpaper' }, { status: 500 });
-  }
+  // Delete file from UploadThing
+  await utapi.deleteFiles([fileKey]);
+
+  return NextResponse.json({ ok: true });
 }

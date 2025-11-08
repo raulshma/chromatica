@@ -8,12 +8,28 @@ async function request(input: string, init?: RequestInit) {
       ? input
       : `${ADMIN_API_BASE_URL}${input}`;
 
+  // Check if we're on the server side
+  const isServer = typeof window === 'undefined';
+
+  const headers: Record<string, string> = {
+    ...(init?.headers || {}),
+    'Content-Type': 'application/json',
+  };
+
+  // On server side, we need to forward cookies for authentication
+  if (isServer) {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
+
+    if (allCookies.length > 0) {
+      headers.Cookie = allCookies.map(c => `${c.name}=${c.value}`).join('; ');
+    }
+  }
+
   const res = await fetch(path, {
     ...init,
-    headers: {
-      ...(init?.headers || {}),
-      'Content-Type': 'application/json',
-    },
+    headers,
     cache: 'no-store',
   });
   if (res.redirected) {

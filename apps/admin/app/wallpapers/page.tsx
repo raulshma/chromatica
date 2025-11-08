@@ -1,20 +1,30 @@
-import { requireAdminSession } from '@/lib/auth';
-import { adminApi } from '@/lib/api-client';
+import { getAdminSession } from '@/lib/auth';
+import { getWallpapersServer } from '@/lib/server-actions';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default async function WallpapersPage() {
-  await requireAdminSession();
-  const data = await adminApi.getWallpapers();
-  const items = (data.items ?? []) as {
+  // First check authentication before anything else
+  console.log('Checking authentication for wallpapers page');
+  const sessionResult = await getAdminSession();
+  console.log('Session result:', sessionResult);
+
+  if (!sessionResult.ok) {
+    console.log('Redirecting to login - authentication failed');
+    redirect('/login');
+  }
+
+  // Only fetch data if authenticated
+  const data = await getWallpapersServer();
+  const items = (data?.items ?? []) as {
     id: string;
     name?: string;
     description?: string;
     previewUrl?: string;
     size?: number;
   }[];
-  console.log(items);
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
       <div className="mx-auto max-w-6xl px-6 py-6 space-y-4">
