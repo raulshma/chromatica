@@ -22,10 +22,10 @@ adminRouter.get('/wallpapers', async (_req: Request, res: Response) => {
         name: data.name ?? 'Untitled',
         previewUrl: data.previewUrl ?? '',
         fullUrl: data.fullUrl ?? data.previewUrl ?? '',
-        size: data.size,
+        size: data.size ?? 0,
         uploadedAt: data.uploadedAt ?? new Date().toISOString(),
         description: data.description,
-        tags: data.tags,
+        tags: data.tags ?? [],
         dominantColor: data.dominantColor,
       } satisfies Wallpaper;
     });
@@ -76,7 +76,9 @@ adminRouter.get('/categories', async (_req: Request, res: Response) => {
   try {
     const redis = getRedisClient();
     const raw = redis ? await redis.get(ADMIN_CATEGORIES_KEY) : null;
-    const categories = (raw ? (JSON.parse(raw) as WallpaperCollection[]) : []) satisfies WallpaperCollection[];
+    const categories = (
+      raw ? (JSON.parse(raw) as WallpaperCollection[]) : []
+    ) satisfies WallpaperCollection[];
     res.json({ items: categories });
   } catch (error) {
     console.error('[api] failed to list categories', error);
