@@ -9,6 +9,7 @@
   },
   "workspaces": [
     "apps/mobile",
+    "apps/admin",
     "packages/*"
   ],
   "scripts": {

@@ -1,14 +1,17 @@
 import express from 'express';
+import { json } from 'express';
 import { UTApi } from 'uploadthing/server';
 import type { Wallpaper, WallpaperFeedResponse } from '@chromatica/shared';
 import { applySecurityMiddleware } from './middleware/security.js';
 import { globalLimiter, wallpapersLimiter } from './middleware/rateLimit.js';
 import { wallpapersCacheMiddleware, setWallpapersCache } from './middleware/cache.js';
 import { config } from './config.js';
+import { adminRouter } from './routes/admin.js';
 
 const app = express();
 applySecurityMiddleware(app);
 app.use(globalLimiter);
+app.use(json());
 
 const utapi = new UTApi({
   token: config.uploadthingToken,
@@ -24,6 +27,8 @@ type UploadThingFile =
     : never;
 
 const uploadthingAppId = config.uploadthingAppId;
+
+app.use('/admin', adminRouter);
 
 app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req, res) => {
   try {

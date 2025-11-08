@@ -15,6 +15,7 @@
   "files": [],
   "references": [
     { "path": "./apps/mobile/tsconfig.json" },
+    { "path": "./apps/admin/tsconfig.json" },
     { "path": "./packages/shared/tsconfig.json" },
     { "path": "./packages/api/tsconfig.json" }
   ]
