@@ -65,6 +65,12 @@ async function request(input: string, init?: RequestInit) {
 
 export const adminApi = {
   getWallpapers: () => request('/api/admin/wallpapers'),
+  getWallpaper: (id: string) => {
+    if (!id) {
+      return Promise.reject(new Error('Wallpaper id is required'));
+    }
+    return request(`/api/admin/wallpapers/${encodeURIComponent(id)}`);
+  },
   upsertWallpaper: (id: string, body: unknown) =>
     request(`/api/admin/wallpapers/${encodeURIComponent(id)}`, {
       method: 'POST',

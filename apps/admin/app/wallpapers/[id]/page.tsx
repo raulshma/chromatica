@@ -1,37 +1,39 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api-client';
 import React from 'react';
 
 interface EditableWallpaper {
   id: string;
   name?: string;
+  displayName?: string;
   description?: string;
   previewUrl?: string;
   fullUrl?: string;
   size?: number;
 }
 
-export default function WallpaperDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function WallpaperDetailPage() {
   const router = useRouter();
-  const search = useSearchParams();
-  const resolvedParams = React.use(params);
-  const id = decodeURIComponent(resolvedParams.id);
+  const params = useParams<{ id: string }>();
+  const id = params?.id ? decodeURIComponent(params.id) : '';
   const [item, setItem] = useState<EditableWallpaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) return; // safety guard, prevents /undefined calls
+
     let cancelled = false;
     (async () => {
       try {
-        const data = await adminApi.getWallpapers();
-        const found = (data.items ?? []).find((w: EditableWallpaper) => w.id === id);
+        const data = await adminApi.getWallpaper(id);
+        console.log('[admin] fetched wallpaper data:', data);
         if (!cancelled) {
-          setItem(found || { id });
+          setItem(data ?? { id });
         }
       } catch (err) {
         if (!cancelled) {
@@ -110,19 +112,40 @@ export default function WallpaperDetailPage({ params }: { params: Promise<{ id: 
 
         <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-900/40 p-4">
           {item.previewUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.previewUrl}
-              alt={item.name || 'Wallpaper'}
-              className="h-40 w-full object-cover rounded-lg border border-slate-800/70"
-            />
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.previewUrl}
+                alt={item.displayName || item.name || 'Wallpaper'}
+                className="h-40 w-full object-cover rounded-lg border border-slate-800/70"
+                onError={e => {
+                  // show a small console hint when image fails to load
+
+                  console.warn('[admin] preview image failed to load', {
+                    id,
+                    src: item.previewUrl,
+                    err: e,
+                  });
+                }}
+              />
+              <p className="mt-2 text-xs text-slate-400">Preview URL: {item.previewUrl}</p>
+            </div>
           )}
           <div className="space-y-2">
-            <label className="block text-[10px] font-medium text-slate-400">Name</label>
+            <label className="block text-[10px] font-medium text-slate-400">Display name</label>
             <input
               className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={item.displayName ?? ''}
+              onChange={e => setItem({ ...item, displayName: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-medium text-slate-400">Name (file key)</label>
+            <input
+              className="w-full px-3 py-2 rounded-md bg-slate-900/60 border border-slate-800 text-slate-500 text-xs"
               value={item.name ?? ''}
-              onChange={e => setItem({ ...item, name: e.target.value })}
+              disabled
+              readOnly
             />
           </div>
           <div className="space-y-2">

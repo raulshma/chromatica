@@ -31,7 +31,8 @@ export async function getDb(): Promise<Db | null> {
 
 export interface AdminWallpaperMeta {
   id: string;
-  name?: string;
+  name?: string; // underlying file key / technical name
+  displayName?: string; // human-friendly name shown in admin UI
   description?: string;
   previewUrl?: string;
   fullUrl?: string;
