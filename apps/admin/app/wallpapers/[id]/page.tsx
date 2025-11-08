@@ -27,9 +27,7 @@ export default function WallpaperDetailPage({ params }: { params: { id: string }
     (async () => {
       try {
         const data = await adminApi.getWallpapers();
-        const found = (data.items ?? []).find((w: any) => w.id === id) as
-          | EditableWallpaper
-          | undefined;
+        const found = (data.items ?? []).find((w: EditableWallpaper) => w.id === id);
         if (!cancelled) {
           setItem(found || { id });
         }
@@ -128,7 +126,7 @@ export default function WallpaperDetailPage({ params }: { params: { id: string }
           <div className="space-y-2">
             <label className="block text-[10px] font-medium text-slate-400">Description</label>
             <textarea
-              className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[80px]"
+              className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-20"
               value={item.description ?? ''}
               onChange={e => setItem({ ...item, description: e.target.value })}
             />

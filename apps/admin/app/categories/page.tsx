@@ -1,5 +1,7 @@
 import { requireAdminSession } from '@/lib/auth';
 import { adminApi } from '@/lib/api-client';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +23,11 @@ export default async function CategoriesPage() {
             <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
             <p className="text-sm text-slate-400">Curate collections and organize wallpapers.</p>
           </div>
-          <a
+          <Link
             href="/wallpapers"
             className="px-3 py-1.5 text-xs rounded-md border border-slate-700 text-slate-300 hover:bg-slate-900">
             Back to wallpapers
-          </a>
+          </Link>
         </header>
 
         <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-3">

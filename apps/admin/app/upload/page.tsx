@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { UploadDropzone } from '@/lib/uploadthing';
 
@@ -16,11 +17,11 @@ export default function UploadPage() {
               Upload images via UploadThing; then adjust metadata from the Wallpapers view.
             </p>
           </div>
-          <a
+          <Link
             href="/wallpapers"
             className="px-3 py-1.5 text-xs rounded-md border border-slate-700 text-slate-300 hover:bg-slate-900">
             Back to wallpapers
-          </a>
+          </Link>
         </header>
 
         <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-4">
@@ -31,7 +32,7 @@ export default function UploadPage() {
               if (!res || res.length === 0) return;
               setMessage(`Uploaded ${res.length} file(s).`);
             }}
-            onUploadError={error => {
+            onUploadError={(error: Error) => {
               setMessage(error.message || 'Upload failed');
             }}
           />

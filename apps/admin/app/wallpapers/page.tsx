@@ -1,15 +1,19 @@
 import { requireAdminSession } from '@/lib/auth';
 import { adminApi } from '@/lib/api-client';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default async function WallpapersPage() {
   await requireAdminSession();
-  const session = await getAdminSession();
-  if (!session.ok) return null;
-
   const data = await adminApi.getWallpapers();
-  const items = (data.items ?? []) as any[];
+  const items = (data.items ?? []) as {
+    id: string;
+    name?: string;
+    description?: string;
+    previewUrl?: string;
+    size?: number;
+  }[];
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
@@ -20,16 +24,16 @@ export default async function WallpapersPage() {
             <p className="text-sm text-slate-400">Manage wallpapers, metadata, and visibility.</p>
           </div>
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href="/categories"
               className="px-3 py-1.5 text-xs rounded-md border border-slate-700 text-slate-300 hover:bg-slate-900">
               Categories
-            </a>
-            <a
+            </Link>
+            <Link
               href="/upload"
               className="px-3 py-1.5 text-xs rounded-md bg-emerald-500 text-slate-950 hover:bg-emerald-400">
               Upload wallpaper
-            </a>
+            </Link>
           </div>
         </header>
 
