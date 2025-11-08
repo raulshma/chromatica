@@ -67,33 +67,12 @@ export async function getWallpapersServer() {
           console.warn(`Invalid file key at index ${index}:`, key);
           return null;
         }
-
-        // Clean the key to ensure it's a valid URL path component
-        // Make sure to remove any URL encoding that might have been applied
-        let cleanKey = key.trim();
-
-        // If the key already looks like a URL, extract just the file key part
-        if (cleanKey.includes('://')) {
-          try {
-            const url = new URL(cleanKey);
-            cleanKey = url.pathname.startsWith('/f/')
-              ? url.pathname.substring(3) // Remove '/f/' prefix
-              : url.pathname.substring(1); // Remove leading slash
-          } catch {
-            // If URL parsing fails, just remove protocol and domain
-            cleanKey = cleanKey.replace(/^https?:\/\/[^\/]+\/f\//, '');
-          }
-        }
-
-        // Replace spaces with %20 to ensure valid URLs
-        cleanKey = cleanKey.replace(/\s+/g, '%20');
-
         const baseUrl = uploadthingAppId
-          ? `https://${uploadthingAppId}.ufs.sh/f/${cleanKey}`
-          : `https://utfs.io/f/${cleanKey}`;
+          ? `https://${uploadthingAppId}.ufs.sh/f/${key}`
+          : `https://utfs.io/f/${key}`;
 
         return {
-          id: cleanKey,
+          id: key,
           name: file.name ?? 'Untitled',
           previewUrl: baseUrl,
           size: file.size,
