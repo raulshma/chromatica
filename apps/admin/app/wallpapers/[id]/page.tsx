@@ -85,8 +85,11 @@ export default function WallpaperDetailPage() {
   }
 
   async function handleGenerateBrief() {
-    if (!imageFile || !item?.displayName) {
-      setError('Image file and display name are required to generate a brief');
+    // Use either the new image file or the existing preview URL
+    const imageToUse = imageFile || item?.previewUrl;
+
+    if (!imageToUse || !item?.displayName) {
+      setError('Image and display name are required to generate a brief');
       return;
     }
 
@@ -97,6 +100,7 @@ export default function WallpaperDetailPage() {
         mongoDbId,
         imageFile,
         item.displayName,
+        !imageFile ? item.previewUrl : undefined,
       );
       setItem({ ...item, brief: response.brief });
     } catch (err) {
@@ -161,7 +165,9 @@ export default function WallpaperDetailPage() {
           )}
 
           <div className="space-y-2">
-            <label className="block text-[10px] font-medium text-slate-400">Replace Image</label>
+            <label className="block text-[10px] font-medium text-slate-400">
+              Replace Image (optional)
+            </label>
             <input
               type="file"
               accept="image/*"
@@ -172,6 +178,9 @@ export default function WallpaperDetailPage() {
               <p className="text-xs text-slate-400">
                 Selected: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
               </p>
+            )}
+            {!imageFile && item.previewUrl && (
+              <p className="text-xs text-slate-400">Using existing image for brief generation</p>
             )}
           </div>
 
@@ -201,7 +210,7 @@ export default function WallpaperDetailPage() {
               </label>
               <button
                 onClick={handleGenerateBrief}
-                disabled={generatingBrief || !imageFile || !item.displayName}
+                disabled={generatingBrief || (!imageFile && !item.previewUrl) || !item.displayName}
                 className="text-xs px-2 py-1 rounded-md bg-blue-600 text-slate-50 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                 {generatingBrief ? 'Generating...' : 'Generate with Gemini'}
               </button>
@@ -210,7 +219,7 @@ export default function WallpaperDetailPage() {
               className="w-full px-3 py-2 rounded-md bg-slate-950/80 border border-slate-700 text-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-20"
               value={item.brief ?? ''}
               onChange={e => setItem({ ...item, brief: e.target.value })}
-              placeholder="1-2 sentence AI-generated description of the wallpaper"
+              placeholder="1-2 sentence AI-generated description of the wallpaper (use Generate with Gemini button or edit manually)"
             />
           </div>
 

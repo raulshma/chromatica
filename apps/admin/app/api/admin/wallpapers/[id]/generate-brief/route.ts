@@ -15,22 +15,45 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const imageFile = formData.get('image') as File | null;
+    const imageUrl = formData.get('imageUrl') as string | null;
     const displayName = formData.get('displayName') as string | null;
 
-    if (!imageFile) {
-      return NextResponse.json({ error: 'Image file is required' }, { status: 400 });
+    if (!imageFile && !imageUrl) {
+      return NextResponse.json(
+        { error: 'Either image file or image URL is required' },
+        { status: 400 },
+      );
     }
 
     if (!displayName) {
       return NextResponse.json({ error: 'Display name is required' }, { status: 400 });
     }
 
-    // Convert file to buffer
-    const arrayBuffer = await imageFile.arrayBuffer();
-    const imageBuffer = Buffer.from(arrayBuffer);
+    let base64Image: string;
 
-    // Resize image and convert to base64
-    const base64Image = await resizeImageToBase64(imageBuffer, 512);
+    if (imageFile) {
+      // Convert file to buffer
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const imageBuffer = Buffer.from(arrayBuffer);
+
+      // Resize image and convert to base64
+      base64Image = await resizeImageToBase64(imageBuffer, 512);
+    } else if (imageUrl) {
+      // Fetch image from URL and convert to base64
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        return NextResponse.json({ error: 'Failed to fetch image from URL' }, { status: 400 });
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      const imageBuffer = Buffer.from(arrayBuffer);
+      // Resize image and convert to base64
+      base64Image = await resizeImageToBase64(imageBuffer, 512);
+    } else {
+      return NextResponse.json(
+        { error: 'Either image file or image URL is required' },
+        { status: 400 },
+      );
+    }
 
     // Generate brief using Gemini vision
     const result = await generateText({

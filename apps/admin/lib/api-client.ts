@@ -80,9 +80,19 @@ export const adminApi = {
     request(`/api/admin/wallpapers/${encodeURIComponent(mongoDbId)}`, {
       method: 'DELETE',
     }),
-  generateBriefWithImage: (mongoDbId: string, file: File, displayName: string) => {
+  generateBriefWithImage: (
+    mongoDbId: string,
+    file: File | null,
+    displayName: string,
+    imageUrl?: string,
+  ) => {
     const formData = new FormData();
-    formData.append('image', file);
+    if (file) {
+      formData.append('image', file);
+    }
+    if (imageUrl) {
+      formData.append('imageUrl', imageUrl);
+    }
     formData.append('displayName', displayName);
 
     // Note: We need to use fetch directly for FormData instead of the request wrapper

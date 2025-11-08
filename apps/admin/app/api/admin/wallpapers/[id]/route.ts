@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/auth';
-import { utapi, uploadthingAppId } from '@/lib/uploadthing-server';
+import { utapi } from '@/lib/uploadthing-server';
 import { getWallpapersCollection } from '@/lib/db';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -34,15 +34,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Wallpaper not found' }, { status: 404 });
     }
 
-    const baseUrl = uploadthingAppId
-      ? `https://${uploadthingAppId}.ufs.sh/f/${doc.uploadThingFileKey}`
-      : `https://utfs.io/f/${doc.uploadThingFileKey}`;
-
     return NextResponse.json({
       _id: doc._id.toString(),
       uploadThingFileKey: doc.uploadThingFileKey,
-      url: baseUrl,
-      previewUrl: doc.previewUrl || baseUrl,
+      url: doc.fullUrl,
+      previewUrl: doc.previewUrl || doc.fullUrl,
       fileName: doc.fileName ?? 'Untitled',
       displayName: doc.displayName ?? null,
       description: doc.description ?? null,
