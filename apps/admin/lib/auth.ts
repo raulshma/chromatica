@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 const SESSION_COOKIE_NAME = 'admin_session';

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/auth';
 import { utapi, uploadthingAppId } from '@/lib/uploadthing-server';
+import { getWallpapersCollection } from '@/lib/db';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const authResult = await requireAdminApiSession();
-  if (authResult?.status === 401) {
-    return authResult;
+  const isAdmin = await requireAdminApiSession();
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { id } = params;
@@ -18,39 +19,74 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     ? `https://${uploadthingAppId}.ufs.sh/f/${id}`
     : `https://utfs.io/f/${id}`;
 
+  const wallpapers = await getWallpapersCollection();
+  const doc = wallpapers ? await wallpapers.findOne({ id }) : null;
+
   return NextResponse.json({
     id,
     url: baseUrl,
     previewUrl: baseUrl,
+    name: doc?.name ?? null,
+    description: doc?.description ?? null,
+    size: doc?.size ?? null,
+    history: doc?.history ?? [],
   });
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const authResult = await requireAdminApiSession();
-  if (authResult?.status === 401) {
-    return authResult;
+  const isAdmin = await requireAdminApiSession();
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { id } = params;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
-  // Don't try to parse the request URL, we don't need it for this endpoint
-  // to avoid the "File URL path must be absolute" error in Next.js error handling
-
-  // For UploadThing, we can rename files if needed
-  if (body.name && typeof body.name === 'string') {
-    await utapi.renameFiles([{ fileKey: id, newName: body.name }]);
-    return NextResponse.json({ ok: true });
+  const wallpapers = await getWallpapersCollection();
+  if (!wallpapers) {
+    return NextResponse.json({ error: 'MongoDB not configured' }, { status: 500 });
   }
 
-  // No metadata updates needed for UploadThing
+  const now = new Date().toISOString();
+
+  // Build $set and history changes diff
+  const set: Record<string, unknown> = {};
+  const changes: Record<string, { from: unknown; to: unknown }> = {};
+
+  if (typeof body.name === 'string') {
+    set.name = body.name;
+    changes.name = { from: undefined, to: body.name };
+    await utapi.renameFiles([{ fileKey: id, newName: body.name }]);
+  }
+  if (typeof body.description === 'string') {
+    set.description = body.description;
+    changes.description = { from: undefined, to: body.description };
+  }
+
+  if (Object.keys(set).length) {
+    set.updatedAt = now;
+    await wallpapers.updateOne(
+      { id },
+      {
+        $set: set,
+        $push: {
+          history: {
+            at: now,
+            changes,
+          },
+        },
+      },
+      { upsert: true },
+    );
+  }
+
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const authResult = await requireAdminApiSession();
-  if (authResult?.status === 401) {
-    return authResult;
+  const isAdmin = await requireAdminApiSession();
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Ensure id is treated as plain string, not as path-like
@@ -60,8 +96,29 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   // Don't try to parse the request URL, we don't need it for this endpoint
   // to avoid the "File URL path must be absolute" error in Next.js error handling
 
+  const wallpapers = await getWallpapersCollection();
+
   // Delete file from UploadThing
   await utapi.deleteFiles([fileKey]);
+
+  if (wallpapers) {
+    const now = new Date().toISOString();
+    await wallpapers.updateOne(
+      { id: fileKey },
+      {
+        $set: { status: 'failure', updatedAt: now },
+        $push: {
+          history: {
+            at: now,
+            changes: {
+              deleted: { from: 'active', to: 'deleted' },
+            },
+          },
+        },
+      },
+      { upsert: true },
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

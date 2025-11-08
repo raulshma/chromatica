@@ -38,8 +38,14 @@ export interface AdminWallpaperMeta {
   size?: number;
   tags?: string[];
   dominantColor?: string;
+  status?: 'pending' | 'success' | 'failure';
   createdAt?: string;
   updatedAt?: string;
+  history?: Array<{
+    at: string;
+    by?: string;
+    changes: Record<string, { from: unknown; to: unknown }>;
+  }>;
 }
 
 export interface AdminCategory {

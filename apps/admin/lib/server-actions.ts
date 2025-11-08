@@ -1,16 +1,8 @@
 'use server';
 
-import { UTApi } from 'uploadthing/server';
 import { getAdminSession } from './auth';
-import { utapi, uploadthingAppId } from './uploadthing-server';
-
-// Derive file type from UTApi listFiles
-type UploadThingFile =
-  Awaited<ReturnType<UTApi['listFiles']>> extends {
-    files: readonly (infer T)[];
-  }
-    ? T
-    : never;
+import { utapi } from './uploadthing-server';
+import { getWallpapersCollection } from './db';
 
 // Helper function to check authentication
 async function ensureAdminSession() {
@@ -21,71 +13,35 @@ async function ensureAdminSession() {
   return sessionResult;
 }
 
-// Server-side function to fetch wallpapers directly without HTTP round-trip
+// Server-side function to fetch wallpapers from MongoDB metadata
 export async function getWallpapersServer() {
   // Verify the calling context has admin session
   await ensureAdminSession();
 
-  // Check environment variables
-  if (!process.env.UPLOADTHING_TOKEN) {
-    console.error('UPLOADTHING_TOKEN is not set');
-    throw new Error('Server configuration error: Missing UploadThing token');
-  }
-
-  if (!process.env.UPLOADTHING_APP_ID) {
-    console.error('UPLOADTHING_APP_ID is not set');
-    throw new Error('Server configuration error: Missing UploadThing app ID');
-  }
-
   try {
-    // Fetch files from UploadThing directly
-    console.log('Fetching files from UploadThing...');
-    const listResult = await utapi.listFiles({
-      limit: 100,
-    });
-
-    const files = listResult.files as UploadThingFile[];
-
-    if (!files || !Array.isArray(files)) {
-      console.error('Invalid response from UploadThing:', listResult);
-      throw new Error('Invalid response from file storage service');
+    const wallpapers = await getWallpapersCollection();
+    if (!wallpapers) {
+      console.warn('[admin] MongoDB not available; returning empty wallpapers list.');
+      return { items: [] };
     }
 
-    console.log(`Found ${files.length} files in UploadThing`);
+    // Fetch non-failed wallpapers, newest first
+    const docs = await wallpapers
+      .find({ $or: [{ status: { $exists: false } }, { status: { $ne: 'failure' } }] })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .toArray();
 
-    // Transform the files to match expected UI format
-    const items = files
-      .map((file, index) => {
-        const key = file.customId ?? file.key ?? file.id;
-        if (!key) {
-          console.warn(`File at index ${index} has no key, customId, or id`);
-          return null;
-        }
-
-        // Validate key is a string and not empty
-        if (typeof key !== 'string' || key.trim() === '') {
-          console.warn(`Invalid file key at index ${index}:`, key);
-          return null;
-        }
-        const baseUrl = uploadthingAppId
-          ? `https://${uploadthingAppId}.ufs.sh/f/${key}`
-          : `https://utfs.io/f/${key}`;
-
-        return {
-          id: key,
-          name: file.name ?? 'Untitled',
-          previewUrl: baseUrl,
-          size: file.size,
-          uploadedAt: new Date(file.uploadedAt).toISOString(),
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => Boolean(item));
-
-    console.log(`Successfully processed ${items.length} files`);
+    const items = docs.map(doc => ({
+      id: doc.id,
+      name: doc.name ?? undefined,
+      description: doc.description ?? undefined,
+      previewUrl: doc.previewUrl ?? undefined,
+      size: doc.size ?? undefined,
+    }));
 
     return { items };
   } catch (error) {
-    console.error('Error fetching files from UploadThing:', error);
+    console.error('[admin] Failed to load wallpapers from MongoDB', error);
     throw new Error('Failed to fetch wallpapers');
   }
 }
