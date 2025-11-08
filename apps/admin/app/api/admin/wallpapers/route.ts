@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminApiSession } from '@/lib/auth';
 import { getWallpapersCollection } from '@/lib/db';
 
 export async function GET() {
-  await requireAdminSession();
+  await requireAdminApiSession();
 
   const col = await getWallpapersCollection();
   if (!col) {

@@ -1,9 +1,14 @@
 // Admin API client: calls internal Next.js API routes only.
-const ADMIN_API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || '';
+const RAW_ADMIN_BASE = process.env.NEXT_PUBLIC_APP_URL || '';
+const ADMIN_API_BASE_URL = RAW_ADMIN_BASE.replace(/\/+$/, '');
 
 async function request(input: string, init?: RequestInit) {
-  const url = `${ADMIN_API_BASE_URL}${input}` || input;
-  const res = await fetch(url, {
+  const path =
+    input.startsWith('http://') || input.startsWith('https://')
+      ? input
+      : `${ADMIN_API_BASE_URL}${input}`;
+
+  const res = await fetch(path, {
     ...init,
     headers: {
       ...(init?.headers || {}),
@@ -11,10 +16,34 @@ async function request(input: string, init?: RequestInit) {
     },
     cache: 'no-store',
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || `Request failed with ${res.status}`);
+  if (res.redirected) {
+    throw new Error('Request was redirected (likely to login)');
   }
+
+  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
+  if (!res.ok) {
+    if (contentType.includes('application/json')) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Request failed with ${res.status}`);
+    }
+    const text = await res.text().catch(() => '');
+    throw new Error(
+      text
+        ? `Request failed with ${res.status}: ${text.slice(0, 200)}`
+        : `Request failed with ${res.status}`,
+    );
+  }
+
+  if (!contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '');
+    throw new Error(
+      text
+        ? `Expected JSON response but received: ${text.slice(0, 200)}`
+        : 'Expected JSON response',
+    );
+  }
+
   return res.json();
 }
 

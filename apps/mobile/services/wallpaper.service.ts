@@ -18,6 +18,16 @@ export async function fetchWallpapersFeed(): Promise<WallpaperFeedResponse> {
     throw new Error(`Failed to load wallpapers (${response.status})`);
   }
 
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+  if (!contentType.includes('application/json')) {
+    const text = await response.text().catch(() => '');
+    throw new Error(
+      text
+        ? `Unexpected response content-type: ${contentType || 'unknown'} - ${text.slice(0, 200)}`
+        : 'Unexpected response content-type',
+    );
+  }
+
   const payload = (await response.json()) as WallpaperFeedResponse;
 
   return {

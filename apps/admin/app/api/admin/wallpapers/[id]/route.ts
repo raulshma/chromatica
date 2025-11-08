@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminSession } from '@/lib/auth';
+import { requireAdminApiSession } from '@/lib/auth';
 import { getWallpapersCollection } from '@/lib/db';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  await requireAdminSession();
+  await requireAdminApiSession();
   const { id } = params;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  await requireAdminSession();
+  await requireAdminApiSession();
   const { id } = params;
 
   const col = await getWallpapersCollection();
