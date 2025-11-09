@@ -3,8 +3,8 @@ import { Env } from '@chromatica/shared';
 export interface ApiConfig {
   nodeEnv: Env | 'test';
   port: number;
-  uploadthingToken?: string;
-  uploadthingAppId?: string;
+  mongodbUri: string;
+  mongodbDb: string;
   redisUrl?: string;
   redisHost?: string;
   redisPort?: number;
@@ -35,12 +35,17 @@ const parseOrigins = (value: string | undefined): string[] => {
 
 export const getConfig = (): ApiConfig => {
   const nodeEnv = (process.env.NODE_ENV as Env | 'test') || Env.dev;
+  const mongodbUri = process.env.MONGODB_URI;
+
+  if (!mongodbUri) {
+    throw new Error('MONGODB_URI environment variable is required');
+  }
 
   return {
     nodeEnv,
     port: toInt(process.env.PORT, 3000),
-    uploadthingToken: process.env.UPLOADTHING_TOKEN,
-    uploadthingAppId: process.env.UPLOADTHING_APP_ID ?? process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID,
+    mongodbUri,
+    mongodbDb: process.env.MONGODB_DB || 'chromatica',
     redisUrl: process.env.REDIS_URL,
     redisHost: process.env.REDIS_HOST,
     redisPort: toInt(process.env.REDIS_PORT, 18882),
