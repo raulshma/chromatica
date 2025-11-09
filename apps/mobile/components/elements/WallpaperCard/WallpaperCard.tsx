@@ -31,27 +31,27 @@ function WallpaperCardComponent({
       <Image source={{ uri: wallpaper.previewUrl }} contentFit="cover" style={styles.image} />
       <LinearGradient colors={CARD_GRADIENT} style={styles.overlay} />
       <View style={styles.metaContainer}>
-        <View>
-          <Text style={styles.title} numberOfLines={2}>
-            {title}
-          </Text>
-          {wallpaper.tags?.length ? (
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {wallpaper.tags.slice(0, 2).join(' • ')}
-            </Text>
-          ) : null}
-        </View>
-        <Pressable
-          accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-          hitSlop={12}
-          onPress={onToggleFavorite}
-          style={styles.favoriteButton}>
-          <MaterialCommunityIcons
-            name={isFavorite ? 'heart' : 'heart-outline'}
-            size={20}
-            color={isFavorite ? colors.pink : colors.white}
-          />
-        </Pressable>
+      <View style={styles.textContainer}>
+      <Text style={styles.title} numberOfLines={2}>
+      {title}
+      </Text>
+      {wallpaper.tags?.length ? (
+      <Text style={styles.subtitle} numberOfLines={1}>
+      {wallpaper.tags.slice(0, 2).join(' • ')}
+      </Text>
+      ) : null}
+      </View>
+      <Pressable
+      accessibilityLabel={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      hitSlop={12}
+      onPress={onToggleFavorite}
+      style={styles.favoriteButton}>
+      <MaterialCommunityIcons
+      name={isFavorite ? 'heart' : 'heart-outline'}
+      size={20}
+      color={isFavorite ? colors.pink : colors.white}
+      />
+      </Pressable>
       </View>
     </Pressable>
   );
@@ -88,6 +88,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  textContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
   title: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
@@ -106,6 +110,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(10, 12, 16, 0.35)',
+    flexShrink: 0,
   },
 });
 

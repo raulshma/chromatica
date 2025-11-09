@@ -1,15 +1,16 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   Alert,
   Dimensions,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
   Pressable,
+  Animated,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Image from '@/components/elements/Image';
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 24,
-    paddingTop: 54,
+    paddingTop: 34,
     zIndex: 10,
   },
   headerRow: {
@@ -61,14 +62,14 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(10,12,16,0.4)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   previewContainer: {
     flex: 1,
   },
   image: {
     width: '100%',
-    height: screenHeight * 0.72,
+    height: screenHeight,
   },
   footer: {
     padding: 24,
@@ -119,13 +120,68 @@ const styles = StyleSheet.create({
 
 export default function Details() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { dispatch, items, favorites } = useWallpaperSlice();
+  const scrollY = useMemo(() => new Animated.Value(0), []);
+
+  // Hide tab bar when details screen is focused
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
+    });
+
+    return () => {
+      unsubscribe();
+      // Show tab bar when leaving details screen
+      navigation.getParent()?.setOptions({ tabBarStyle: undefined });
+    };
+  }, [navigation]);
 
   const wallpaper = useMemo(() => items.find(item => item._id === id) ?? items[0], [id, items]);
 
   const [isSaving, setSaving] = useState(false);
   const [isSetting, setSetting] = useState(false);
+
+  const headerAnimatedStyle = useMemo(
+    () => ({
+      opacity: scrollY.interpolate({
+        inputRange: [screenHeight * 0.5, screenHeight * 0.8],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      }),
+      transform: [
+        {
+          translateY: scrollY.interpolate({
+            inputRange: [screenHeight * 0.5, screenHeight * 0.8],
+            outputRange: [0, -50],
+            extrapolate: 'clamp',
+          }),
+        },
+      ],
+    }),
+    [scrollY],
+  );
+
+  const footerAnimatedStyle = useMemo(
+    () => ({
+      opacity: scrollY.interpolate({
+        inputRange: [screenHeight * 0.6, screenHeight * 0.9],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+      }),
+      transform: [
+        {
+          translateY: scrollY.interpolate({
+            inputRange: [screenHeight * 0.6, screenHeight * 0.9],
+            outputRange: [40, 0],
+            extrapolate: 'clamp',
+          }),
+        },
+      ],
+    }),
+    [scrollY],
+  );
 
   const isFavorite = useMemo(
     () => (wallpaper ? favorites.includes(wallpaper._id) : false),
@@ -209,32 +265,29 @@ export default function Details() {
 
   return (
     <SafeAreaView style={styles.root}>
-      <LinearGradient
-        colors={['rgba(11,13,24,0.6)', 'rgba(11,13,24,0.0)']}
-        locations={[0, 0.3]}
-        pointerEvents="none"
-        style={styles.header}
-      />
-      <View style={styles.header}>
+      <Animated.View style={[styles.header, headerAnimatedStyle]}>
+        <LinearGradient
+          colors={['rgba(11,13,24,0.6)', 'rgba(11,13,24,0.0)']}
+          locations={[0, 0.3]}
+          pointerEvents="none"
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.headerRow}>
           <View style={styles.brandRow}>
             <MaterialCommunityIcons name="waves" size={24} color={colors.white} />
             <Text style={styles.brandText}>Zenith</Text>
           </View>
-          <View style={styles.metaRow}>
-            {tagLine ? <Text style={styles.tagText}>{tagLine}</Text> : <View />}
-            <Text style={styles.tagText}>{readableSize}</Text>
-          </View>
-          <Pressable onPress={handleToggleFavorite}>
-            <MaterialCommunityIcons
-              name={isFavorite ? 'heart' : 'heart-outline'}
-              size={24}
-              color={isFavorite ? colors.pink : colors.white}
-            />
+          <Pressable style={styles.paletteButton}>
+            <MaterialCommunityIcons name="palette-outline" size={24} color={colors.white} />
           </Pressable>
         </View>
-      </View>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      </Animated.View>
+      <Animated.ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: false,
+        })}>
         <View style={styles.previewContainer}>
           <Image
             source={{ uri: wallpaper.fullUrl }}
@@ -246,7 +299,7 @@ export default function Details() {
         <LinearGradient
           colors={['rgba(10,12,16,0.0)', 'rgba(10,12,16,0.9)']}
           style={{ paddingTop: 32 }}>
-          <View style={styles.footer}>
+          <Animated.View style={[styles.footer, footerAnimatedStyle]}>
             <View>
               <Text style={styles.title}>
                 {wallpaper.displayName ?? wallpaper.fileName ?? 'Wallpaper'}
@@ -286,9 +339,9 @@ export default function Details() {
                 <Text style={styles.secondaryLabel}>Close</Text>
               </Pressable>
             </View>
-          </View>
+          </Animated.View>
         </LinearGradient>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }

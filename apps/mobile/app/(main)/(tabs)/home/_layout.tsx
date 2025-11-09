@@ -12,20 +12,24 @@ export default function HomeStackLayout() {
   return (
     <Stack
       screenOptions={{
-        headerTintColor: colors.white,
-        headerStyle: { backgroundColor: isDark ? colors.blackGray : colors.darkPurple },
-        headerTitleStyle: { fontSize: 18 },
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: isDark ? colors.blackGray : colors.darkPurple,
+        },
       }}>
       <Stack.Screen
         name="index"
         options={{
-          title: 'Home',
-          headerTitle: () => <NavigationHeaderTitle />,
-          headerLeft: () => <NavigationHeaderLeft onPress={toggleDrawer} />,
-          headerTitleAlign: 'center',
+          headerShown: false,
         }}
       />
-      <Stack.Screen name="details" options={{ title: 'Details' }} />
+      <Stack.Screen
+        name="details"
+        options={{
+          title: 'Details',
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

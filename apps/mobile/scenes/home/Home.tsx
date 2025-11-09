@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  RefreshControl,
-  FlatList,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-} from 'react-native';
+import { RefreshControl, FlatList, StyleSheet, Text, View, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,38 +15,58 @@ import type { Wallpaper } from '@chromatica/shared';
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.blackGray,
+    backgroundColor: colors.backgroundDark,
   },
   header: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerActionsContainer: {
+    width: 48,
+    height: 48,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontFamily: fonts.bold,
-    fontSize: 28,
+    fontSize: 18,
     color: colors.white,
-    marginBottom: 6,
   },
   headerSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.72)',
+    display: 'none',
   },
   listContent: {
     paddingHorizontal: 12,
     paddingBottom: 120,
+    paddingTop: 8,
   },
   floatingButton: {
     position: 'absolute',
-    right: 24,
-    bottom: 32,
+    right: 20,
+    bottom: 40,
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.purple,
+    backgroundColor: colors.primary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   emptyState: {
     flex: 1,
@@ -121,8 +134,17 @@ export default function Home() {
 
   const header = (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>Aura Walls</Text>
-      <Text style={styles.headerSubtitle}>Curated gradients for your home screen</Text>
+      <View style={styles.headerIconContainer}>
+        <MaterialCommunityIcons name="wallpaper" size={28} color={colors.white} />
+      </View>
+      <View style={styles.headerTitleContainer}>
+        <Text style={styles.headerTitle}>Aura Walls</Text>
+      </View>
+      <View style={styles.headerActionsContainer}>
+        <Pressable onPress={() => {}} accessibilityLabel="Search wallpapers">
+          <MaterialCommunityIcons name="magnify" size={24} color={colors.white} />
+        </Pressable>
+      </View>
     </View>
   );
 
@@ -175,7 +197,7 @@ export default function Home() {
           numColumns={2}
           ListHeaderComponent={header}
           contentContainerStyle={styles.listContent}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          columnWrapperStyle={{ gap: 12 }}
           renderItem={renderItem}
           refreshControl={
             <RefreshControl

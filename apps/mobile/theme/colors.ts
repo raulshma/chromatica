@@ -1,4 +1,10 @@
 export const colors = {
+  // Aura Walls brand palette
+  primary: '#19d4e6',
+  backgroundLight: '#f6f8f8',
+  backgroundDark: '#112021',
+
+  // Legacy / supporting palette
   darkPurple: '#231d54',
   purple: '#8100ff',
   lightPurple: '#9388db',
