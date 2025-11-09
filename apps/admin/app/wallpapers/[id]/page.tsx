@@ -18,6 +18,32 @@ interface EditableWallpaper {
   brief?: string;
 }
 
+interface TooltipProps {
+  text: string;
+}
+
+function Tooltip({ text }: TooltipProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+        onClick={() => setIsVisible(!isVisible)}
+        className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 ml-2">
+        ?
+      </button>
+      {isVisible && (
+        <div className="absolute bottom-full left-0 mb-2 w-max max-w-xs p-2 bg-slate-800 text-slate-100 text-xs rounded-md border border-slate-700 shadow-lg z-10 whitespace-normal">
+          {text}
+          <div className="absolute top-full left-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-800"></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function WallpaperDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
@@ -28,6 +54,7 @@ export default function WallpaperDetailPage() {
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [reasoningText, setReasoningText] = useState<string | null>(null);
 
   useEffect(() => {
     if (!mongoDbId) return; // safety guard, prevents /undefined calls
@@ -95,6 +122,7 @@ export default function WallpaperDetailPage() {
 
     setGeneratingBrief(true);
     setError(null);
+    setReasoningText(null);
     try {
       const response = await adminApi.generateBriefWithImage(
         mongoDbId,
@@ -103,8 +131,23 @@ export default function WallpaperDetailPage() {
         !imageFile ? item.previewUrl : undefined,
       );
       setItem({ ...item, brief: response.brief });
+      setReasoningText(response.reasoning || null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to generate brief';
+      let message = 'Failed to generate brief';
+
+      if (err instanceof Error) {
+        // Handle specific URL fetch errors more gracefully
+        if (err.message.includes('Unable to fetch image from URL')) {
+          message =
+            'Unable to fetch the existing image from storage. Please upload the image file directly using the "Replace Image" field above and try again.';
+        } else if (err.message.includes('ENOTFOUND')) {
+          message =
+            'Unable to connect to image storage. This might be due to network issues or expired URLs. Please try uploading the image directly.';
+        } else {
+          message = err.message;
+        }
+      }
+
       setError(message);
     } finally {
       setGeneratingBrief(false);
@@ -180,7 +223,10 @@ export default function WallpaperDetailPage() {
               </p>
             )}
             {!imageFile && item.previewUrl && (
-              <p className="text-xs text-slate-400">Using existing image for brief generation</p>
+              <p className="text-xs text-slate-400">
+                Using existing image for brief generation. If this fails, try uploading the image
+                file directly using the field above.
+              </p>
             )}
           </div>
 
@@ -205,13 +251,21 @@ export default function WallpaperDetailPage() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <label className="block text-[10px] font-medium text-slate-400">
-                Brief (AI-generated)
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="block text-[10px] font-medium text-slate-400">
+                  Brief (AI-generated)
+                </label>
+                {reasoningText && <Tooltip text={reasoningText} />}
+              </div>
               <button
                 onClick={handleGenerateBrief}
                 disabled={generatingBrief || (!imageFile && !item.previewUrl) || !item.displayName}
-                className="text-xs px-2 py-1 rounded-md bg-blue-600 text-slate-50 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="text-xs px-2 py-1 rounded-md bg-blue-600 text-slate-50 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={
+                  !imageFile
+                    ? 'Tip: If using existing image fails, try uploading the file directly'
+                    : 'Generate AI brief for the wallpaper'
+                }>
                 {generatingBrief ? 'Generating...' : 'Generate with Gemini'}
               </button>
             </div>

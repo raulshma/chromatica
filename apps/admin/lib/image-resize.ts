@@ -13,8 +13,19 @@ export async function resizeImageToBase64(
   maxDimension: number = 512,
 ): Promise<string> {
   try {
+    // Check if the buffer is empty or invalid
+    if (!inputBuffer || inputBuffer.length === 0) {
+      throw new Error('Invalid or empty image buffer');
+    }
+
     // Get original image metadata
-    const metadata = await sharp(inputBuffer).metadata();
+    let metadata;
+    try {
+      metadata = await sharp(inputBuffer).metadata();
+    } catch (sharpError) {
+      console.error('Sharp metadata error:', sharpError);
+      throw new Error('Invalid image format or corrupted image data');
+    }
 
     if (!metadata.width || !metadata.height) {
       throw new Error('Unable to determine image dimensions');
@@ -34,18 +45,50 @@ export async function resizeImageToBase64(
     }
 
     // Resize the image
-    const resized = await sharp(inputBuffer)
-      .resize(width, height, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .toBuffer();
+    let resized;
+    try {
+      resized = await sharp(inputBuffer)
+        .resize(width, height, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .toBuffer();
+    } catch (resizeError) {
+      console.error('Sharp resize error:', resizeError);
+      throw new Error('Failed to resize image');
+    }
+
+    // Check if the resize operation was successful
+    if (!resized || resized.length === 0) {
+      throw new Error('Image resize resulted in empty buffer');
+    }
 
     // Convert to base64
-    const base64 = resized.toString('base64');
+    let base64;
+    try {
+      base64 = resized.toString('base64');
+    } catch (base64Error) {
+      console.error('Base64 conversion error:', base64Error);
+      throw new Error('Failed to convert image to base64');
+    }
+
+    // Validate the base64 string
+    if (base64.length === 0) {
+      throw new Error('Base64 conversion resulted in empty string');
+    }
+
     return `data:image/jpeg;base64,${base64}`;
   } catch (error) {
     console.error('Error resizing image:', error);
+    // If we've already wrapped the error, just rethrow it
+    if (
+      error instanceof Error &&
+      (error.message.includes('Invalid image') ||
+        error.message.includes('Failed to resize') ||
+        error.message.includes('Failed to convert'))
+    ) {
+      throw error;
+    }
     throw new Error(
       `Failed to resize image: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
