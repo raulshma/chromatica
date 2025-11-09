@@ -1,300 +1,582 @@
-<h1 align="center">
-  <img src='https://github.com/wataru-maeda/react-native-boilerplate/blob/main/__DELELE_ME__/banner.png' width='600'>
-</h1>
+# Chromatica
 
-<p align="center">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="React Native is released under the MIT license." />
-  <img src="https://github.com/wataru-maeda/react-native-boilerplate/actions/workflows/preview.yml/badge.svg" alt="" />
-  <img src="https://github.com/wataru-maeda/react-native-boilerplate/actions/workflows/test.yml/badge.svg" alt="" />
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome!" />
-</p>
+A full-stack monorepo for exploring, managing, and setting beautiful wallpapers on mobile devices. Chromatica combines a React Native mobile app, a scalable Express API backend, and an admin dashboard for wallpaper curation—all unified through shared TypeScript types.
 
-<p align="center">
-  <img src='https://github.com/wataru-maeda/react-native-boilerplate/blob/main/__DELELE_ME__/demo-light-theme.gif' width='150px'>
-  <img src='https://github.com/wataru-maeda/react-native-boilerplate/blob/main/__DELELE_ME__/demo-dark-theme.gif' width='150px'>
-</p>
+**Version:** 5.0.0  
+**License:** MIT
 
-Say goodbye to time-consuming setup tasks like restructuring files, installing libraries, and crafting reusable components. Our project boilerplate is your solution to eliminate redundant work when starting from scratch. Built with the latest Expo SDK 54, React 19.1, and modern development practices, it includes only the most commonly-used libraries, so you can hit the ground running with a fully configured setup.
+---
 
-## 🎯 Pre-configured Features
+## 🏗️ Architecture
 
-- 📱 **Expo SDK 54** with React 19.1 and React Native 0.81.4
-- 🏗️ **New Architecture** enabled by default for optimal performance
-- 🧭 **Expo Router v6** with flat config for file-based routing
-- 🎨 **Light/Dark theme** support with automatic detection
-- 🔄 **Redux Toolkit** for predictable state management
-- 📦 **Environment configuration** with dotenvx for dev/staging/prod
-- 🚀 **CI/CD workflows** with EAS Build and Preview channels
-- 🛠️ **Modern tooling**: ESLint 9 (flat config), Prettier, Jest
-- 🌐 **Multi-platform**: iOS, Android, and Web distribution
-- 📝 **AI-friendly**: Claude.md and Cursor rules for AI development
-- 🧪 **Testing ready**: React Native Testing Library setup
-- 🔒 **Type-safe**: Strict TypeScript configuration
+Chromatica is organized as an **npm monorepo** with TypeScript project references for seamless type safety across packages:
 
-## 🗒️ Requirements
+### Packages
 
-- [Node: 20.x or higher](https://nodejs.org/en)
-- [Expo CLI](https://docs.expo.dev/more/expo-cli/)
-- [EAS CLI](https://docs.expo.dev/build/setup/) (for builds and deployment)
+| Package | Type | Purpose | Tech Stack |
+|---------|------|---------|-----------|
+| **`@chromatica/mobile`** | App | Cross-platform wallpaper browsing & management | React Native, Expo, Redux Toolkit |
+| **`@chromatica/api`** | Backend | RESTful API for wallpaper data & management | Express.js, MongoDB, Redis |
+| **`admin`** | Dashboard | Admin interface for wallpaper uploads & curation | Next.js, UploadThing, MongoDB |
+| **`@chromatica/shared`** | Library | TypeScript types & utilities shared across all packages | TypeScript |
+
+### Directory Structure
+
+```
+chromatica/
+├── apps/
+│   ├── mobile/                 # React Native app (Expo Router)
+│   │   ├── app/               # File-based routing
+│   │   ├── services/          # API service layer
+│   │   ├── slices/            # Redux state management
+│   │   ├── components/        # UI components
+│   │   ├── hooks/             # Custom React hooks
+│   │   └── theme/             # Design tokens & colors
+│   └── admin/                 # Next.js admin dashboard
+│       ├── app/               # Next.js routing
+│       ├── components/        # React components
+│       ├── lib/               # Utilities & API clients
+│       └── public/            # Static assets
+├── packages/
+│   ├── api/                   # Express backend
+│   │   ├── src/
+│   │   │   ├── index.ts      # Express app & routes
+│   │   │   ├── config.ts     # Environment config
+│   │   │   ├── db.ts         # MongoDB client
+│   │   │   ├── redis-client.ts # Redis connection
+│   │   │   └── middleware/   # Express middleware
+│   │   └── vercel.json       # Vercel deployment config
+│   └── shared/               # Shared types & constants
+│       └── src/
+│           └── types/        # TypeScript type definitions
+├── package.json              # Root workspace config
+├── tsconfig.json             # Root TypeScript config
+└── vercel.json              # Root Vercel config
+```
+
+---
 
 ## 🚀 Quick Start
 
-1. Download zip or click "Use this template"
-2. Install packages with `npm install` or `yarn install`
-3. Spin up dev environment with `npm run dev` or `yarn run dev`
+### Prerequisites
 
-## 🤖 What's included
+- **Node.js:** ≥18.17.0
+- **npm:** ≥9.0.0
+- **Expo CLI** (for mobile development)
 
-<details>
-  <summary><b>File-based Router</b></summary>
-  
-####
+### Installation
 
-The project uses [**Expo Router**](https://docs.expo.dev/router/introduction/) with a pre-configured navigation structure which has updated from react-navigation. The navigation structure is based on file-based routing, making it easier to manage and navigate between screens. The project has a pre-configured navigation structure with a drawer and tab navigation. You can easily add new screens and navigations by following the existing structure:
-
-```
-Root (Drawer)
-├── Home Tab
-│   └── Stack
-│       ├── Home Screen
-│       └── Details Screen
-└── Profile Tab
-    └── Stack
-        ├── Profile Screen
-        └── Details Screen
+```bash
+# Clone and install
+git clone <repo-url>
+cd chromatica
+npm install
 ```
 
-</details>
+### Development
 
-<details>
-  <summary><b>Global State Management</b></summary>
+```bash
+# Mobile app (default)
+npm run dev
 
-####
+# API server only
+npm run dev:api
 
-### State Management with Redux Toolkit
+# Admin dashboard
+npm run dev:admin
+
+# All services in parallel
+npm run dev:all
+
+# Platform-specific mobile builds
+npm run dev:ios       # iOS simulator
+npm run dev:android   # Android emulator
+npm run dev:web       # Web browser
+```
+
+### Building
+
+```bash
+# Type-check entire monorepo
+npm run type-check
+
+# Build API for production
+npm run build:api
+
+# Build mobile (EAS)
+npm run build:mobile
+
+# Build admin dashboard
+npm run build:admin
+
+# Full build & type-check
+npm run build
+```
+
+### Testing & Linting
+
+```bash
+# Run all tests
+npm run test
+
+# Watch mode
+npm run test:watch
+
+# Linting all packages
+npm run lint
+
+# Auto-format code
+npm run format
+```
+
 ---
 
-This project uses [**Redux Toolkit**](https://redux-toolkit.js.org/) for global state management, pre-configured with Redux Hooks for immediate use. 
+## 📱 Mobile App (`@chromatica/mobile`)
 
-#### Getting Started
-1. Explore existing slices in the [`/slices`](https://github.com/wataru-maeda/react-native-boilerplate/tree/main/slices) directory
-2. See usage examples in [`/app/_layout.tsx`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/app/_layout.tsx#L23)
+A React Native application built with Expo for iOS, Android, and Web platforms.
 
-#### Adding New State
-1. Copy [`/slices/app.slice.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/slices/app.slice.ts)
-2. Rename and modify for your needs
-3. Add your slice to [`/utils/store.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/utils/store.ts#L10)
+### Features
 
-#### Development
-Redux logger is enabled by default. To disable, remove the logger from [`/utils/store.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/utils/store.ts#L13).
+- **Wallpaper Feed:** Browse curated wallpapers with infinite scroll
+- **Wallpaper Details:** View high-resolution images with metadata
+- **Favorites:** Save and manage favorite wallpapers
+- **Set Wallpaper:** Quick actions to set wallpapers as lock screen or home screen
+- **User Profile:** Manage user preferences and account settings
+- **Deep Linking:** Direct navigation via custom URL schemes
 
-</details>
+### Key Technologies
 
-<details>
-  <summary><b>Theme Management</b></summary>
+- **Expo Router:** File-based routing similar to Next.js
+- **Redux Toolkit:** Centralized state management with slices
+- **React Navigation:** Tab and drawer navigation
+- **Async Storage:** Local data persistence
+- **Gorhom Bottom Sheet:** Native sheet components
 
-####
+### Project Structure
 
-The project simplifies asset and theme management through a centralized [`/theme`](https://github.com/wataru-maeda/react-native-boilerplate/tree/main/theme) directory that handles images, icons, fonts, and colors, with built-in asset preloading and SVG support for optimal performance, while also providing a custom `useColorScheme` hook (located in [`/hooks/useColorScheme.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/hooks/useColorScheme.ts)) that automatically detects and adapts colors based on the current theme across both mobile and web platforms - making it easy to implement dynamic theming by returning the current color scheme name and flags (isDark, isLight) for conditional styling.
+```
+apps/mobile/
+├── app/                  # Expo Router pages
+│   ├── _layout.tsx      # Root layout with providers
+│   ├── index.tsx        # Home screen
+│   ├── set-wallpaper.tsx # Wallpaper detail & set
+│   └── (main)/          # Main app routes
+├── components/
+│   ├── elements/        # Low-level UI components
+│   └── layouts/         # Page/screen layout wrappers
+├── services/            # API service functions
+│   ├── wallpaper.service.ts
+│   └── user.service.ts
+├── slices/              # Redux state slices
+│   ├── app.slice.ts
+│   ├── wallpaper.slice.ts
+│   └── index.ts
+├── hooks/               # Custom React hooks
+├── theme/               # Design tokens, colors, fonts
+└── utils/
+    ├── config.ts        # Environment & API configuration
+    ├── store.ts         # Redux store setup
+    └── deviceInfo.ts    # Device utilities
+```
 
-</details>
+### Running
 
-<details>
-  <summary><b>Environment Variables</b></summary>
+```bash
+# Development
+npm run dev:mobile
 
-####
+# Platform-specific
+npm run dev:ios
+npm run dev:android
+npm run dev:web
 
-### Environment Variables Management
+# Type-check
+npm run type-check
+
+# Test
+npm run test
+
+# Lint
+npm run lint
+```
+
 ---
 
-The project uses [`dotenvx`](https://dotenvx.com/) to handle environment variables across both Expo CLI and EAS CLI builds. Here's how it works:
+## 🔌 API (`@chromatica/api`)
 
-#### Setup Structure
-- `.env.dev.example` - Development environment template
-- `.env.prod.example` - Production environment template
-- Configuration in [`app.config.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/app.config.ts) and [`utils/config.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/utils/config.ts)
+An Express.js REST API server with MongoDB backend, deployable to Vercel as a serverless function.
 
-#### Getting Started with Your Expo Account
-1. Rename `.env.dev.example` to `.env.dev`
-2. Update `owner` in [`app.json`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/app.json#L6) with your Expo username
-3. Set your `EXPO_SLUG` and `EXPO_PROJECT_ID` in `.env.dev`
+### Endpoints
 
-#### Adding New Environment Variables
-1. Add variables to both `.env.dev` and `.env.prod`
-2. Include them in `app.config.ts` under the [`extra`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/app.config.ts#L29) object
-3. Define them in [`utils/config.ts`](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/utils/config.ts#L6)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Health check |
+| `GET` | `/wallpapers` | Fetch wallpaper feed with metadata |
+| `POST` | `/admin/wallpapers` | Create wallpaper (admin only) |
+| `PUT` | `/admin/wallpapers/:id` | Update wallpaper (admin only) |
+| `DELETE` | `/admin/wallpapers/:id` | Delete wallpaper (admin only) |
 
-#### Verify Configuration
-- Check variables in the app's bottom sheet OR...
-- Run `npm run dev:config:public` to view loaded variables in console
+### Features
 
-### Environment Variables & Security
+- **Caching:** Redis integration for `/wallpapers` endpoint (120s TTL)
+- **Rate Limiting:** Configurable global & endpoint-specific limits
+- **Security:** Helmet.js headers, CORS protection, Bearer token auth for admin routes
+- **Database:** MongoDB for persistent wallpaper storage
+- **Type Safety:** Full TypeScript with shared types from `@chromatica/shared`
+
+### Middleware Stack
+
+```
+Request
+  ↓
+Helmet (Security Headers)
+  ↓
+CORS (Cross-Origin Validation)
+  ↓
+Global Rate Limiter
+  ↓
+JSON Parser
+  ↓
+Endpoint-Specific Middleware (Cache, Rate Limit, Auth)
+  ↓
+Route Handler
+```
+
+### Project Structure
+
+```
+packages/api/src/
+├── index.ts             # Express app & route definitions
+├── config.ts            # Environment variables & config
+├── db.ts                # MongoDB client & collections
+├── redis-client.ts      # Redis connection pool
+├── middleware/
+│   ├── security.ts      # Helmet & CORS setup
+│   ├── rateLimit.ts     # Express rate limiter
+│   ├── cache.ts         # Redis caching logic
+│   └── adminAuth.ts     # Bearer token validation
+└── routes/              # API routes (if modularized)
+```
+
+### Environment Variables
+
+```env
+# .env.dev
+NODE_ENV=development
+PORT=3000
+MONGODB_URI=mongodb+srv://...
+REDIS_URL=redis://localhost:6379
+UPLOADTHING_TOKEN=sk_live_...
+ADMIN_TOKEN=your_secret_token
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+CACHE_TTL_SECONDS=120
+```
+
+### Running
+
+```bash
+# Development (watch mode)
+npm run dev:api
+
+# Build
+npm run build:api
+
+# Start production server
+npm start
+
+# Test
+npm run test:api
+
+# Type-check
+npm run type-check
+```
+
 ---
 
-The project intentionally avoids using `EXPO_PUBLIC_` prefix for environment variables, instead utilizing EAS secrets for enhanced security. Here's why:
+## 📊 Admin Dashboard (`admin`)
 
-#### Current Approach
-- Variables are uploaded to EAS servers as `secrets`
-- Securely accessible only during EAS build and submit processes
-- Use `npm run dev:secret:push` to automatically upload variables from `.env.dev` and `.env.prod`
+A Next.js-based admin interface for managing wallpapers, uploads, and curation.
 
-#### Alternative Approach
-If you prefer direct access via `process.env`:
-- Use `EXPO_PUBLIC_` prefix for non-sensitive data
-- **Warning**: Never store sensitive information with `EXPO_PUBLIC_` prefix as it exposes data to clients
-- For sensitive data handling, follow [React Native's security guidelines](https://reactnative.dev/docs/security#storing-sensitive-info) for storing sensitive information
+### Features
 
-</details>
+- **Wallpaper Upload:** Batch upload with UploadThing integration
+- **Wallpaper Management:** Edit metadata, tags, and descriptions
+- **Category Management:** Organize wallpapers into collections
+- **AI-Generated Descriptions:** Auto-generate wallpaper briefs using Gemini API
+- **Authentication:** Secure admin login system
 
-<details>
-  <summary><b>Simplified Distribution</b></summary>
+### Technologies
 
-####
+- **Next.js 16:** Server components & API routes
+- **UploadThing:** File upload service
+- **MongoDB:** Data persistence
+- **Vercel AI SDK:** AI-powered features (Gemini)
+- **Tailwind CSS:** Styling
 
-The project streamlines deployment with simple commands - use `npm run dev:build:mobile` to generate iOS (IPA) and Android (APK) distributions, and `npm run dev:deploy:web` to deploy the web version to EAS Hosting.
+### Running
 
-</details>
-
-<details>
-  <summary><b>Development and Build Scripts</b></summary>
-
-####
-
-#### Development:
-- `npm run dev` - Run on all platforms
-- `npm run dev:ios` - Run iOS only
-- `npm run dev:android` - Run Android only
-- `npm run dev:web` - Run web only
-
-#### Building:
-- `npm run dev:build:mobile` - Build mobile apps
-- `npm run dev:build:web` - Build web app
-- `npm run dev:deploy:web` - Deploy web app to [EAS Hosting](https://docs.expo.dev/eas/hosting/introduction/)
-
-#### Testing:
-- `npm run lint` - Run ESLint
-- `npm run format` - Run Prettier
-- `npm run test` - Run Jest tests
-
-</details>
-
-<details>
-  <summary><b>Code formatting, linting and testing on pre-commit</b></summary>
-
-####
-
-The project maintains code quality through integrated Eslint, Prettier, and Jest configurations - code is automatically scanned and formatted during development (especially with 'Format on Save' enabled), while pre-commit hooks verify, format, and test your code to ensure all commits meet quality standards.
-
-</details>
-
-<details>
-  <summary><b>Release preview channel on Pull-Request (only mobile)</b></summary>
-
-####
-
-- When you've completed your work and need to share a preview with the QA team, our boilerplate automates the distribution process for you. Here's how it works:
-1. Whenever you create a pull request (PR) or merge, it automatically generates a preview channel in your Expo account.
-2. You don't need to run 'eas' commands every time you create a PR; the process is streamlined for you.
-3. The continuous delivery (CD) process is managed through the [preview.yml](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/.github/workflows/preview.yml) configuration file, which utilizes [expo-github-action](https://github.com/expo/expo-github-action).
-
-To set up the CD workflow, follow these steps:
-1. Create an `EXPO_TOKEN` in your Expo account. You can do this by visiting [this link](https://expo.dev/accounts/%5Baccount%5D/settings/access-tokens).
-2. In your GitHub repository, go to **Settings**, then navigate to **Secrets and variables** -> **Actions** -> **Add new repository secret**. Make sure to name the secret as `EXPO_TOKEN`.
-3. Update `name`, `slug`, `owner`, `projectId` and `url` in [app.json](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/app.json):
-4. Update in `name`, `slug`, `projectId`, `ios`, `android` in [app.config.ts](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/app.config.ts)
-6. After you push changes to the main branch, a new preview will be created automatically.
-
-</details>
-
-## 🔧 Available Scripts
-
-The project includes comprehensive development, building, testing, and deployment scripts to streamline your workflow.
-
-<details>
-  <summary><b>Development Commands</b></summary>
-
-####
-
-- `npm run dev` - Start Expo development server for all platforms with cache cleared
-- `npm run dev:ios` - Start development server for iOS simulator only
-- `npm run dev:android` - Start development server for Android emulator only  
-- `npm run dev:web` - Start development server for web browser only
-- `npm run dev:doctor` - Run Expo diagnostics to check project health
-
-</details>
-
-<details>
-  <summary><b>Building & Deployment</b></summary>
-
-####
-
-- `npm run dev:build:mobile` - Build iOS (IPA) and Android (APK) using EAS Build for development
-- `npm run dev:build:web` - Export static web application to `dist/` directory
-- `npm run dev:serve:web` - Serve the built web app locally (run after `dev:build:web`)
-- `npm run dev:deploy:web` - Build and deploy web app to [EAS Hosting](https://docs.expo.dev/eas/hosting/introduction/)
-
-</details>
-
-<details>
-  <summary><b>Environment & Configuration</b></summary>
-
-####
-
-- `npm run dev:secret:push` - Upload environment variables from `.env.dev` to EAS secrets
-- `npm run dev:secret:list` - List all environment variables stored in EAS
-- `npm run dev:config:public` - Display current Expo configuration for debugging
-
-</details>
-
-<details>
-  <summary><b>Code Quality & Testing</b></summary>
-
-####
-
-- `npm run lint` - Run ESLint to check code quality and style
-- `npm run lint:staged` - Run linting only on staged Git files (used in pre-commit)
-- `npm run format` - Format code using Prettier
-- `npm run test` - Run Jest unit tests
-- `npm run test:watch` - Run Jest tests in watch mode for development
-- `npm run prepare` - Set up Husky Git hooks for pre-commit quality checks
-
-</details>
-
-<details>
-  <summary><b>Common Usage Examples</b></summary>
-
-####
-
-**Start development:**
 ```bash
-npm run dev                    # All platforms
-npm run dev:web               # Web only
+npm run dev:admin     # http://localhost:3001
+npm run build         # Production build
+npm start             # Start production server
 ```
 
-**Build and deploy web:**
-```bash
-npm run dev:build:web         # Build static files
-npm run dev:serve:web         # Test locally
-npm run dev:deploy:web        # Deploy to EAS Hosting
+---
+
+## 🤝 Shared Types (`@chromatica/shared`)
+
+TypeScript type definitions and utilities shared across mobile, API, and admin packages.
+
+### Exported Types
+
+#### `Wallpaper`
+
+```typescript
+interface Wallpaper {
+  _id: string;                  // MongoDB ObjectId
+  uploadThingFileKey: string;   // UploadThing file key
+  fileName: string;             // Original filename
+  displayName?: string;         // UI display name
+  description?: string;
+  previewUrl: string;           // Thumbnail URL
+  fullUrl: string;              // Full-resolution URL
+  size: number;                 // File size in bytes
+  uploadedAt: string;           // ISO timestamp
+  dominantColor?: string;       // Hex color
+  tags?: string[];              // Metadata tags
+  artist?: string;              // Creator name
+  brief?: string;               // AI-generated description
+}
 ```
 
-**Code quality:**
-```bash
-npm run lint                  # Check code
-npm run format               # Format code
-npm run test                 # Run tests
+#### `WallpaperFeedResponse`
+
+```typescript
+interface WallpaperFeedResponse {
+  items: Wallpaper[];
+  collections?: WallpaperCollection[];
+  generatedAt: string;
+}
 ```
 
-</details>
+#### `User`
 
-## ☀️ Icons
+User profile and authentication data shared between mobile and API.
 
-Expo provides a popular set of vector icons. Please search icons from [here](https://icons.expo.fyi/)
+### Usage
 
-## 🧑‍💻 Need native code?
+```typescript
+// Import in mobile or API
+import type { Wallpaper, WallpaperFeedResponse } from '@chromatica/shared';
 
-To generate iOS and Android native code, you can run `npx expo prebuild` in the project's root directory. For more details and specific instructions, please refer to the [Expo documentation page](https://docs.expo.dev/workflow/prebuild/).
+const wallpapers: Wallpaper[] = [...];
+const response: WallpaperFeedResponse = { items: wallpapers, generatedAt: new Date().toISOString() };
+```
 
-## 📓 License
+---
 
-This project is available under the MIT license. See the [LICENSE](https://github.com/wataru-maeda/react-native-boilerplate/blob/main/LICENSE) file for more info.
+## 🛠️ Development Workflow
+
+### Adding a New API Endpoint
+
+1. **Define Types:** Update `packages/shared/src/types/` if needed
+2. **Add Route:** Create handler in `packages/api/src/index.ts`
+3. **Apply Middleware:** Add rate limiting, caching, or auth as needed
+4. **Test:** Run `npm run test:api` or use curl/Postman
+5. **Type-Check:** Run `npm run type-check`
+
+### Adding a Mobile Feature
+
+1. **Create Service:** Add function to `apps/mobile/services/`
+2. **Add Redux Slice:** Update `apps/mobile/slices/` if state needed
+3. **Create Component:** Build UI in `apps/mobile/components/`
+4. **Add Route:** Create file in `apps/mobile/app/`
+5. **Test:** Run `npm run test:mobile` or `npm run dev:ios`
+
+### Updating Shared Types
+
+1. Modify `packages/shared/src/types/*.ts`
+2. Export from `packages/shared/src/index.ts` if new
+3. Run `npm run type-check` to verify monorepo compiles
+4. Update consumers in mobile/API as needed
+
+### Code Style & Formatting
+
+```bash
+# Format all files
+npm run format
+
+# Lint all packages
+npm run lint
+
+# Type-check monorepo
+npm run type-check
+```
+
+---
+
+## 📦 Deployment
+
+### API to Vercel
+
+```bash
+# Deploy from root
+vercel deploy
+
+# Or from API package
+cd packages/api
+vercel deploy
+```
+
+**Environment Variables in Vercel:**
+
+```
+MONGODB_URI=mongodb+srv://...
+REDIS_URL=redis://...
+UPLOADTHING_TOKEN=sk_live_...
+ADMIN_TOKEN=your_secret_token
+CORS_ORIGINS=https://your-domain.com
+```
+
+### Mobile to EAS (Expo Application Services)
+
+```bash
+# Build for iOS
+npm run build:mobile
+
+# Build for Android
+eas build --platform android
+
+# Deploy with updates
+npm run dev:deploy:web
+```
+
+### Admin Dashboard to Vercel
+
+```bash
+npm run build:admin
+vercel deploy
+```
+
+---
+
+## 🔐 Security
+
+### API Security
+
+- **Helmet.js:** HTTP headers hardening
+- **CORS:** Configurable cross-origin requests
+- **Rate Limiting:** Prevent abuse with express-rate-limit
+- **Admin Auth:** Bearer token validation for sensitive endpoints
+- **Input Validation:** Type-safe requests with TypeScript
+
+### Mobile Security
+
+- **Environment Secrets:** EAS secrets for production API tokens
+- **Local Storage:** Async storage for non-sensitive user data
+- **Deep Link Validation:** URI scheme verification
+
+---
+
+## 📊 Project Statistics
+
+- **Workspaces:** 4 (mobile, api, admin, shared)
+- **Languages:** TypeScript, JavaScript, TSX, JSX
+- **Type Safety:** Full TypeScript monorepo with project references
+- **Testing:** Jest for all packages
+- **CI/CD:** Pre-commit hooks with Husky + lint-staged
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Mobile app won't start**
+```bash
+# Clear cache and reinstall
+npm install
+npm run dev:mobile
+```
+
+**API connection errors**
+```bash
+# Ensure API is running on correct port
+npm run dev:api
+
+# Check config in apps/mobile/utils/config.ts
+```
+
+**Type errors after package update**
+```bash
+npm run type-check
+npm install
+```
+
+**Redis/MongoDB connection issues**
+```bash
+# Verify environment variables
+# Check .env.dev or .env.prod files
+# Ensure local services are running (for development)
+```
+
+---
+
+## 📚 Documentation
+
+- **Architecture Details:** See `.github/copilot-instructions.md` for in-depth patterns
+- **Monorepo Setup:** See `MONOREPO.md` for workspace configuration
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit changes with clear messages
+4. Push to your fork
+5. Open a pull request
+
+### Code Guidelines
+
+- Use TypeScript for all new code
+- Follow existing naming conventions
+- Add tests for new features
+- Run `npm run format` and `npm run lint` before committing
+- Update types in `@chromatica/shared` if changing data structures
+
+---
+
+## 📄 License
+
+MIT License – See `LICENSE` file for details.
+
+---
+
+## 👤 Author
+
+Created by [Wataru Maeda](https://github.com/wataru-maeda)
+
+---
+
+## 🎯 Roadmap
+
+- [ ] Offline wallpaper management
+- [ ] Enhanced wallpaper search & filtering
+- [ ] User-generated collections
+- [ ] Social sharing features
+- [ ] Performance optimizations
+- [ ] Accessibility improvements
+- [ ] Multi-language support
+
+---
+
+## 📞 Support
+
+For issues, questions, or suggestions, please open an [GitHub issue](https://github.com/raulshma/chromatica/issues).
+
+---
+
+**Happy coding! 🎨**
