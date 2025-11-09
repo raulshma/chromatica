@@ -125,7 +125,7 @@ export default function Details() {
   const { dispatch, items, favorites } = useWallpaperSlice();
   const scrollY = useMemo(() => new Animated.Value(0), []);
 
-  // Hide tab bar when details screen is focused
+  // Ensure tab bar stays hidden when on details screen
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
@@ -133,8 +133,8 @@ export default function Details() {
 
     return () => {
       unsubscribe();
-      // Show tab bar when leaving details screen
-      navigation.getParent()?.setOptions({ tabBarStyle: undefined });
+      // Keep tab bar hidden when leaving details screen
+      navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
     };
   }, [navigation]);
 

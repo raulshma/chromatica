@@ -19,30 +19,34 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 12,
+    paddingBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    height: 56,
   },
   headerIconContainer: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitleContainer: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerActionsContainer: {
-    width: 48,
-    height: 48,
-    alignItems: 'flex-end',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontFamily: fonts.bold,
-    fontSize: 18,
+    fontSize: 20,
     color: colors.white,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     display: 'none',
@@ -54,7 +58,7 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: 'absolute',
-    right: 20,
+    right: 24,
     bottom: 40,
     width: 56,
     height: 56,
@@ -63,10 +67,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.primary,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   emptyState: {
     flex: 1,
@@ -248,10 +252,11 @@ export default function Home() {
             favorites.map(id => {
               const item = items.find(w => w._id === id);
               if (!item) return null;
+              const title = item.displayName ?? item.fileName ?? 'Wallpaper';
               return (
                 <Button
                   key={id}
-                  title={item.name}
+                  title={title}
                   onPress={() => {
                     setSheetOpen(false);
                     router.push({ pathname: '(main)/(tabs)/home/details', params: { id } });

@@ -11,11 +11,17 @@ export default function HomeStackLayout() {
         contentStyle: {
           backgroundColor: isDark ? colors.blackGray : colors.darkPurple,
         },
+        tabBarStyle: {
+          display: 'none',
+        },
       }}>
       <Stack.Screen
         name="index"
         options={{
           headerShown: false,
+          tabBarStyle: {
+            display: 'none',
+          },
         }}
       />
       <Stack.Screen
@@ -23,6 +29,9 @@ export default function HomeStackLayout() {
         options={{
           title: 'Details',
           headerShown: false,
+          tabBarStyle: {
+            display: 'none',
+          },
         }}
       />
     </Stack>

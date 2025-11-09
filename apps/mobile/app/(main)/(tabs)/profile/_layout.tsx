@@ -15,6 +15,9 @@ export default function ProfileStackLayout() {
         headerTintColor: colors.white,
         headerStyle: { backgroundColor: isDark ? colors.blackGray : colors.darkPurple },
         headerTitleStyle: { fontSize: 18 },
+        tabBarStyle: {
+          display: 'none',
+        },
       }}>
       <Stack.Screen
         name="index"
@@ -23,9 +26,20 @@ export default function ProfileStackLayout() {
           headerTitle: () => <NavigationHeaderTitle />,
           headerLeft: () => <NavigationHeaderLeft onPress={toggleDrawer} />,
           headerTitleAlign: 'center',
+          tabBarStyle: {
+            display: 'none',
+          },
         }}
       />
-      <Stack.Screen name="details" options={{ title: 'Details' }} />
+      <Stack.Screen
+        name="details"
+        options={{
+          title: 'Details',
+          tabBarStyle: {
+            display: 'none',
+          },
+        }}
+      />
     </Stack>
   );
 }
