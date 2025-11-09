@@ -1,11 +1,25 @@
 'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText } from 'ai';
+import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
+import { z } from 'zod';
 import { requireAdminApiSession } from '@/lib/auth';
 import { resizeImageToBase64 } from '@/lib/image-resize';
 import { IMAGE_FETCH_TIMEOUT_MS, MAX_IMAGE_SIZE_BYTES } from '@/lib/constants';
+
+const wallpaperCopySchema = z.object({
+  brief: z
+    .string()
+    .describe(
+      "1-2 sentence brief (under 150 characters) describing the wallpaper's essence and appeal",
+    ),
+  description: z
+    .string()
+    .describe(
+      "2-3 sentence detailed description (under 500 characters) of the wallpaper's aesthetic, mood, and technical details",
+    ),
+});
 
 export async function POST(req: NextRequest) {
   const isAdmin = await requireAdminApiSession();
@@ -139,16 +153,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate brief using Gemini vision
-    const { text: resultText, reasoningText } = await generateText({
+    // Generate brief and description using Gemini vision with structured output
+    const result = await generateObject({
       model: google('gemini-2.5-flash'),
+      schema: wallpaperCopySchema,
       messages: [
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: `You are a creative copywriter. Based on this wallpaper image and its display name "${displayName}", write a single concise 1-2 sentence brief that describes the wallpaper's essence and appeal. Focus on the visual style, mood, and why someone would want to use it. Keep it under 150 characters. Provide ONLY the brief text, no options, no alternatives, no explanations.`,
+              text: `You are a creative copywriter. Based on this wallpaper image and its display name "${displayName}", generate both a brief and a detailed description.
+
+Brief: Write a single concise 1-2 sentence brief that describes the wallpaper's essence and appeal. Focus on the visual style, mood, and why someone would want to use it. Keep it under 150 characters.
+
+Description: Write a detailed 2-3 sentence description that captures the aesthetic, mood, and technical details of the wallpaper. Provide context about where this wallpaper would work best. Keep it under 500 characters.`,
             },
             {
               type: 'image',
@@ -168,10 +187,9 @@ export async function POST(req: NextRequest) {
       temperature: 0.7,
     });
 
-    // Extract and clean the generated text
-    const brief = resultText.trim();
+    const { brief, description } = result.object;
 
-    return NextResponse.json({ brief, reasoning: reasoningText });
+    return NextResponse.json({ brief, description, reasoning: result.reasoning });
   } catch (error) {
     console.error('Error generating brief:', error);
 

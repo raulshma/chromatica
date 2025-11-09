@@ -130,7 +130,7 @@ export default function WallpaperDetailPage() {
         item.displayName,
         !imageFile ? item.previewUrl : undefined,
       );
-      setItem({ ...item, brief: response.brief });
+      setItem({ ...item, brief: response.brief, description: response.description });
       setReasoningText(response.reasoning || null);
     } catch (err) {
       let message = 'Failed to generate brief';

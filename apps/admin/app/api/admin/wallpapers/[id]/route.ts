@@ -42,6 +42,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       fileName: doc.fileName ?? 'Untitled',
       displayName: doc.displayName ?? null,
       description: doc.description ?? null,
+      brief: doc.brief ?? null,
+      artist: doc.artist ?? null,
       size: doc.size ?? null,
       history: doc.history ?? [],
     });
