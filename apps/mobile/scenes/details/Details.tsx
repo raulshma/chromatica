@@ -275,7 +275,6 @@ export default function Details() {
         <View style={styles.headerRow}>
           <View style={styles.brandRow}>
             <MaterialCommunityIcons name="waves" size={24} color={colors.white} />
-            <Text style={styles.brandText}>Zenith</Text>
           </View>
           <Pressable style={styles.paletteButton}>
             <MaterialCommunityIcons name="palette-outline" size={24} color={colors.white} />

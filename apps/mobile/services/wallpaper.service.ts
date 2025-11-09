@@ -46,7 +46,7 @@ export async function saveWallpaperToLibrary(wallpaper: Wallpaper): Promise<void
   const cacheDirectory = new Directory(Paths.cache);
   const downloadedFile = await File.downloadFileAsync(wallpaper.fullUrl, cacheDirectory);
   const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
-  await MediaLibrary.createAlbumAsync('Zenith Wallpapers', asset, false).catch(() => {
+  await MediaLibrary.createAlbumAsync('Chromatic Wallpapers', asset, false).catch(() => {
     // Album may already exist on iOS; ignore
   });
 }
@@ -68,7 +68,7 @@ export async function openSetWallpaperDeepLink(wallpaper: Wallpaper): Promise<vo
 }
 
 export function showDownloadSuccessBanner(): void {
-  Alert.alert('Wallpaper Saved', 'Find it in your Zenith Wallpapers album.');
+  Alert.alert('Wallpaper Saved', 'Find it in your Chromatic Wallpapers album.');
 }
 
 export function showDownloadErrorBanner(error: unknown): void {

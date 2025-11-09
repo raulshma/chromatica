@@ -175,7 +175,7 @@ export default function Home() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No wallpapers yet</Text>
           <Text style={styles.emptySubtitle}>
-            Pull down to refresh and fetch the latest Zenith wallpapers.
+            Pull down to refresh and fetch the latest Chromatic wallpapers.
           </Text>
           <Button
             title="Refresh"

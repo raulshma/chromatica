@@ -107,8 +107,8 @@ export default function SetWallpaperPrompt() {
       return {
         _id: params.src,
         uploadThingFileKey: params.src,
-        fileName: 'Zenith Wallpaper',
-        displayName: 'Zenith Wallpaper',
+        fileName: 'Chromatic Wallpaper',
+        displayName: 'Chromatic Wallpaper',
         previewUrl: params.src,
         fullUrl: params.src,
         size: 0,
@@ -131,15 +131,15 @@ export default function SetWallpaperPrompt() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Set Wallpaper</Text>
         <Text style={styles.subtitle}>
-          Apply this Zenith wallpaper using your device settings. Follow the quick guide below and
-          tap “Open Settings” to finish.
+          Apply this Chromatic wallpaper using your device settings. Follow the quick guide below
+          and tap “Open Settings” to finish.
         </Text>
         <View style={styles.instructions}>
           <Text style={styles.stepText}>1. Ensure the wallpaper is saved to your photos.</Text>
           <Text style={styles.stepText}>
             2. Tap “Open Settings” and choose the wallpaper picker option.
           </Text>
-          <Text style={styles.stepText}>3. Select Zenith wallpaper and confirm.</Text>
+          <Text style={styles.stepText}>3. Select Chromatic wallpaper and confirm.</Text>
         </View>
         {wallpaper ? (
           <View style={styles.preview}>
