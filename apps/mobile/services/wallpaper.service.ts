@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import { Directory, File, Paths } from 'expo-file-system';
 import * as Linking from 'expo-linking';
 import * as MediaLibrary from 'expo-media-library';
 import { Alert } from 'react-native';
@@ -43,11 +43,9 @@ export async function saveWallpaperToLibrary(wallpaper: Wallpaper): Promise<void
     throw new Error('Media library permission not granted');
   }
 
-  const fileExtension = wallpaper.fullUrl.split('.').pop() ?? 'jpg';
-  const cachePath = `${FileSystem.cacheDirectory ?? FileSystem.documentDirectory}${wallpaper._id}.${fileExtension}`;
-
-  const download = await FileSystem.downloadAsync(wallpaper.fullUrl, cachePath);
-  const asset = await MediaLibrary.createAssetAsync(download.uri);
+  const cacheDirectory = new Directory(Paths.cache);
+  const downloadedFile = await File.downloadFileAsync(wallpaper.fullUrl, cacheDirectory);
+  const asset = await MediaLibrary.createAssetAsync(downloadedFile.uri);
   await MediaLibrary.createAlbumAsync('Zenith Wallpapers', asset, false).catch(() => {
     // Album may already exist on iOS; ignore
   });
