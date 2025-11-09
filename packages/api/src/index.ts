@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { json } from 'express';
 import type { WallpaperFeedResponse } from '@chromatica/shared';
 import type { Wallpaper as DbWallpaper } from '@chromatica/shared';
@@ -13,57 +13,62 @@ applySecurityMiddleware(app);
 app.use(globalLimiter);
 app.use(json());
 
-app.get('/wallpapers', wallpapersLimiter, wallpapersCacheMiddleware, async (_req, res) => {
-  try {
-    const collection = await getWallpapersCollection();
+app.get(
+  '/wallpapers',
+  wallpapersLimiter,
+  wallpapersCacheMiddleware,
+  async (_req: Request, res: Response) => {
+    try {
+      const collection = await getWallpapersCollection();
 
-    // Query MongoDB for wallpapers, excluding failed ones
-    const dbWallpapers = await collection
-      .find({
-        $or: [{ status: { $exists: false } }, { status: { $ne: 'failure' } }],
-      })
-      .sort({ updatedAt: -1, createdAt: -1 })
-      .toArray();
+      // Query MongoDB for wallpapers, excluding failed ones
+      const dbWallpapers = await collection
+        .find({
+          $or: [{ status: { $exists: false } }, { status: { $ne: 'failure' } }],
+        })
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .toArray();
 
-    const items: DbWallpaper[] = dbWallpapers.map(wallpaper => {
-      // Convert MongoDB ObjectId to string
-      const _id =
-        typeof wallpaper._id === 'string' ? wallpaper._id : (wallpaper._id?.toString() ?? '');
+      const items: DbWallpaper[] = dbWallpapers.map(wallpaper => {
+        // Convert MongoDB ObjectId to string
+        const _id =
+          typeof wallpaper._id === 'string' ? wallpaper._id : (wallpaper._id?.toString() ?? '');
 
-      const item: DbWallpaper = {
-        _id,
-        uploadThingFileKey: wallpaper.uploadThingFileKey,
-        fileName: wallpaper.fileName,
-        displayName: wallpaper.displayName,
-        description: wallpaper.description,
-        previewUrl: wallpaper.previewUrl ?? '',
-        fullUrl: wallpaper.fullUrl ?? '',
-        size: wallpaper.size ?? 0,
-        uploadedAt: wallpaper.createdAt ?? new Date().toISOString(),
-        dominantColor: wallpaper.dominantColor,
-        tags: wallpaper.tags,
-        artist: wallpaper.artist,
-        brief: wallpaper.brief,
+        const item: DbWallpaper = {
+          _id,
+          uploadThingFileKey: wallpaper.uploadThingFileKey,
+          fileName: wallpaper.fileName,
+          displayName: wallpaper.displayName,
+          description: wallpaper.description,
+          previewUrl: wallpaper.previewUrl ?? '',
+          fullUrl: wallpaper.fullUrl ?? '',
+          size: wallpaper.size ?? 0,
+          uploadedAt: wallpaper.createdAt ?? new Date().toISOString(),
+          dominantColor: wallpaper.dominantColor,
+          tags: wallpaper.tags,
+          artist: wallpaper.artist,
+          brief: wallpaper.brief,
+        };
+
+        return item;
+      });
+
+      const response: WallpaperFeedResponse = {
+        items,
+        generatedAt: new Date().toISOString(),
       };
 
-      return item;
-    });
+      await setWallpapersCache(response);
 
-    const response: WallpaperFeedResponse = {
-      items,
-      generatedAt: new Date().toISOString(),
-    };
+      res.json(response);
+    } catch (error) {
+      console.error('[api] failed to list wallpapers', error);
+      res.status(500).json({ error: 'Failed to list wallpapers' });
+    }
+  },
+);
 
-    await setWallpapersCache(response);
-
-    res.json(response);
-  } catch (error) {
-    console.error('[api] failed to list wallpapers', error);
-    res.status(500).json({ error: 'Failed to list wallpapers' });
-  }
-});
-
-app.get('/wallpapers/:uploadThingFileKey', async (req, res) => {
+app.get('/wallpapers/:uploadThingFileKey', async (req: Request, res: Response) => {
   try {
     const { uploadThingFileKey } = req.params;
 
@@ -105,7 +110,7 @@ app.get('/wallpapers/:uploadThingFileKey', async (req, res) => {
   }
 });
 
-app.get('/', (_req, res) => {
+app.get('/', (_req: Request, res: Response) => {
   res.json({ status: 'ok', generatedAt: new Date().toISOString() });
 });
 

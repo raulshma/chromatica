@@ -15,14 +15,17 @@ export const applySecurityMiddleware = (app: Express) => {
 
   app.use(
     cors({
-      origin: (origin, callback) => {
+      origin: (
+        origin: string | undefined,
+        callback: (err: Error | null, allow: boolean) => void,
+      ) => {
         if (!origin || config.cors.origins.includes('*')) {
           return callback(null, true);
         }
         if (config.cors.origins.includes(origin)) {
           return callback(null, true);
         }
-        return callback(new Error('Not allowed by CORS'));
+        return callback(new Error('Not allowed by CORS'), false);
       },
       methods: ['GET'],
       allowedHeaders: ['Content-Type'],

@@ -7,8 +7,8 @@ if (typeof window === 'undefined') {
     // Check if it's the File URL path error we're tracking
     if (reason instanceof Error && reason.message.includes('File URL path must be absolute')) {
       console.error('File URL Error Details:');
-      console.error('- Error code:', reason?.code);
-      console.error('- Error input:', reason?.input);
+      console.error('- Error code:', (reason as any)?.code);
+      console.error('- Error input:', (reason as any)?.input);
       console.error('- Stack trace:', reason?.stack);
 
       // Try to find where this error is originating
@@ -32,8 +32,8 @@ if (typeof window === 'undefined') {
       event.reason.message.includes('File URL path must be absolute')
     ) {
       console.error('File URL Error Details (client):');
-      console.error('- Error code:', event.reason?.code);
-      console.error('- Error input:', event.reason?.input);
+      console.error('- Error code:', (event.reason as any)?.code);
+      console.error('- Error input:', (event.reason as any)?.input);
       console.error('- Stack trace:', event.reason?.stack);
     }
   });
